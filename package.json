@@ -1,0 +1,9 @@
+{
+  "name": "webterminal",
+  "version": "0.1.0",
+  "description": "Interactive virtual terminal UI library for web applications.",
+  "type": "module",
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
