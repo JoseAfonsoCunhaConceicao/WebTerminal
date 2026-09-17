@@ -1,14 +1,22 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist-test",
+    "module": "nodenext",
+    "target": "esnext",
     "types": ["node"],
     "sourceMap": false,
     "declaration": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true
   },
-
   "include": [
     "src/**/*.ts",
     "test/**/*.ts"
