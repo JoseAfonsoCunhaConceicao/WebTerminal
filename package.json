@@ -4,6 +4,12 @@
   "description": "Interactive virtual terminal UI library for web applications.",
   "type": "module",
   "devDependencies": {
+    "@types/node": "^22.20.3",
     "typescript": "^7.0.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:test": "tsc --project tsconfig.test.json",
+    "test": "npm run build:test && node --test \"dist-test/test/**/*.test.js\""
   }
 }
