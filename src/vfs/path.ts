@@ -81,3 +81,12 @@ export function joinPath(basePath: Path, path: Path): Path {
         return jointedPath;
     }
 }
+
+/** Public function that resolves a path for VFS */
+export function resolvePath( currentPath: Path, input: string): Path {
+    const inputPath: Path = parsePath(input);
+    const jointedPath: Path = joinPath(currentPath, inputPath);
+    const normalizedPath: Path = normalizePath(jointedPath);
+
+    return normalizedPath;
+}

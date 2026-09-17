@@ -1,10 +1,11 @@
-import { describe, test } from "node:test";
+import { describe, test, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
   joinPath,
   normalizePath,
   parsePath,
+  resolvePath,
   type Path,
 } from "../../src/vfs/path.js";
 
@@ -413,4 +414,385 @@ describe("path composition", () => {
       isAbsolute: true,
     });
   });
+});
+
+describe("resolvePath", () => {
+    describe("relative paths", () => {
+        it("resolves a relative path against the current path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(currentPath, "documents/file.txt");
+
+            assert.deepStrictEqual(result, {
+                components: ["home", "jose", "documents", "file.txt"],
+                isAbsolute: true,
+            });
+        });
+
+        it("resolves an empty path to the current path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(currentPath, "");
+
+            assert.deepStrictEqual(result, {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            });
+        });
+
+        it("resolves '.' to the current path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(currentPath, ".");
+
+            assert.deepStrictEqual(result, {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            });
+        });
+
+        it("resolves a relative path containing '..'", () => {
+            const currentPath: Path = {
+                components: ["home", "jose", "projects"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(currentPath, "../documents");
+
+            assert.deepStrictEqual(result, {
+                components: ["home", "jose", "documents"],
+                isAbsolute: true,
+            });
+        });
+
+        it("resolves a complex relative path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose", "projects"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(
+                currentPath,
+                "./../documents/./reports/../file.txt",
+            );
+
+            assert.deepStrictEqual(result, {
+                components: [
+                    "home",
+                    "jose",
+                    "documents",
+                    "file.txt",
+                ],
+                isAbsolute: true,
+            });
+        });
+    });
+
+    describe("absolute paths", () => {
+        it("resolves an absolute path independently of the current path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(currentPath, "/etc/config");
+
+            assert.deepStrictEqual(result, {
+                components: ["etc", "config"],
+                isAbsolute: true,
+            });
+        });
+
+        it("ignores the current path when the input is absolute", () => {
+            const currentPath: Path = {
+                components: ["home", "jose", "projects"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(currentPath, "/tmp/file.txt");
+
+            assert.deepStrictEqual(result, {
+                components: ["tmp", "file.txt"],
+                isAbsolute: true,
+            });
+        });
+
+        it("resolves the root path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(currentPath, "/");
+
+            assert.deepStrictEqual(result, {
+                components: [],
+                isAbsolute: true,
+            });
+        });
+    });
+
+    describe("parent traversal", () => {
+        it("resolves multiple parent components", () => {
+            const currentPath: Path = {
+                components: ["home", "jose", "projects"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(currentPath, "../../documents");
+
+            assert.deepStrictEqual(result, {
+                components: ["home", "documents"],
+                isAbsolute: true,
+            });
+        });
+
+        it("does not escape the root", () => {
+            const currentPath: Path = {
+                components: ["home"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(
+                currentPath,
+                "../../../../../etc",
+            );
+
+            assert.deepStrictEqual(result, {
+                components: ["etc"],
+                isAbsolute: true,
+            });
+        });
+
+        it("does not escape the root when resolving an absolute path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(
+                currentPath,
+                "/../../../../etc",
+            );
+
+            assert.deepStrictEqual(result, {
+                components: ["etc"],
+                isAbsolute: true,
+            });
+        });
+    });
+
+    describe("separator handling", () => {
+        it("resolves relative paths with repeated separators", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(
+                currentPath,
+                "documents///projects//file.txt",
+            );
+
+            assert.deepStrictEqual(result, {
+                components: [
+                    "home",
+                    "jose",
+                    "documents",
+                    "projects",
+                    "file.txt",
+                ],
+                isAbsolute: true,
+            });
+        });
+
+        it("resolves absolute paths with repeated separators", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(
+                currentPath,
+                "///home//jose///documents/",
+            );
+
+            assert.deepStrictEqual(result, {
+                components: [
+                    "home",
+                    "jose",
+                    "documents",
+                ],
+                isAbsolute: true,
+            });
+        });
+    });
+
+    describe("nonexistent paths", () => {
+        it("resolves a path even when the target does not exist", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(
+                currentPath,
+                "does-not-exist/file.txt",
+            );
+
+            assert.deepStrictEqual(result, {
+                components: [
+                    "home",
+                    "jose",
+                    "does-not-exist",
+                    "file.txt",
+                ],
+                isAbsolute: true,
+            });
+        });
+
+        it("does not perform filesystem lookup", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            assert.doesNotThrow(() => {
+                resolvePath(
+                    currentPath,
+                    "this/path/does/not/exist",
+                );
+            });
+        });
+    });
+
+    describe("result invariants", () => {
+        it("always returns an absolute path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const inputs = [
+                "",
+                ".",
+                "..",
+                "documents/file.txt",
+                "../documents/file.txt",
+                "/etc/config",
+            ];
+
+            for (const input of inputs) {
+                const result = resolvePath(currentPath, input);
+
+                assert.equal(result.isAbsolute, true);
+            }
+        });
+
+        it("never returns '.' components", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(
+                currentPath,
+                "./documents/./projects/./file.txt",
+            );
+
+            assert.equal(result.components.includes("."), false);
+        });
+
+        it("never returns '..' components", () => {
+            const currentPath: Path = {
+                components: ["home", "jose", "projects"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(
+                currentPath,
+                "../../documents/../file.txt",
+            );
+
+            assert.equal(result.components.includes(".."), false);
+        });
+    });
+
+    describe("immutability", () => {
+        it("does not mutate the current path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose", "projects"],
+                isAbsolute: true,
+            };
+
+            const originalPath: Path = {
+                components: [...currentPath.components],
+                isAbsolute: currentPath.isAbsolute,
+            };
+
+            resolvePath(currentPath, "../documents");
+
+            assert.deepStrictEqual(currentPath, originalPath);
+        });
+
+        it("does not reuse the current path components array", () => {
+            const currentPath: Path = {
+                components: ["home", "jose"],
+                isAbsolute: true,
+            };
+
+            const result = resolvePath(currentPath, "documents");
+
+            assert.notStrictEqual(
+                result.components,
+                currentPath.components,
+            );
+        });
+    });
+
+    describe("determinism", () => {
+        it("produces the same result for repeated calls", () => {
+            const currentPath: Path = {
+                components: ["home", "jose", "projects"],
+                isAbsolute: true,
+            };
+
+            const first = resolvePath(
+                currentPath,
+                "../documents/./file.txt",
+            );
+
+            const second = resolvePath(
+                currentPath,
+                "../documents/./file.txt",
+            );
+
+            assert.deepStrictEqual(first, second);
+        });
+
+        it("is stable when resolving an already resolved path", () => {
+            const currentPath: Path = {
+                components: ["home", "jose", "projects"],
+                isAbsolute: true,
+            };
+
+            const first = resolvePath(
+                currentPath,
+                "../documents/./file.txt",
+            );
+
+            const second = resolvePath(first, "");
+
+            assert.deepStrictEqual(second, first);
+        });
+    });
 });
