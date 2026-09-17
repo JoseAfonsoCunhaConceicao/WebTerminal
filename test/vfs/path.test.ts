@@ -206,6 +206,62 @@ describe("normalizePath", () => {
 
     assert.ok(!result.components.includes(".."));
   });
+
+  test("is idempotent", () => {
+    const input = parsePath("/home/./jose/../docs/./projects/..");
+
+    const once = normalizePath(input);
+    const twice = normalizePath(once);
+
+    assert.deepStrictEqual(twice, once);
+  });
+
+  test("never produces dot components", () => {
+    const inputs = [
+      parsePath(""),
+      parsePath("."),
+      parsePath("./home/./docs"),
+      parsePath("home/./jose/../docs/./file"),
+      parsePath("/home/./jose/../docs"),
+    ];
+
+    for (const input of inputs) {
+      const result = normalizePath(input);
+
+      assert.ok(!result.components.includes("."));
+    }
+  });
+
+  test("never produces parent components in absolute paths", () => {
+    const inputs = [
+      parsePath("/"),
+      parsePath("/.."),
+      parsePath("/../home"),
+      parsePath("/home/../../docs"),
+      parsePath("/home/jose/../../../docs"),
+      parsePath("/home/./jose/../../docs"),
+    ];
+
+    for (const input of inputs) {
+      const result = normalizePath(input);
+
+      assert.strictEqual(result.isAbsolute, true);
+      assert.ok(!result.components.includes(".."));
+    }
+  });
+
+  test("does not mutate the input during repeated normalization", () => {
+    const input = parsePath("/home/./jose/../docs/./projects/..");
+
+    const originalComponents = [...input.components];
+    const originalIsAbsolute = input.isAbsolute;
+
+    const once = normalizePath(input);
+    normalizePath(once);
+
+    assert.deepStrictEqual(input.components, originalComponents);
+    assert.strictEqual(input.isAbsolute, originalIsAbsolute);
+  });
 });
 
 describe("joinPath", () => {
