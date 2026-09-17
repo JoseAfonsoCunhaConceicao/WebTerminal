@@ -334,3 +334,83 @@ describe("joinPath", () => {
     assert.notStrictEqual(result.components, path.components);
   });
 });
+
+describe("path composition", () => {
+  test("resolves a simple relative path", () => {
+    const base = parsePath("/home/jose");
+    const input = parsePath("docs/projects");
+
+    const joined = joinPath(base, input);
+    const result = normalizePath(joined);
+
+    assert.deepStrictEqual(result, {
+      components: ["home", "jose", "docs", "projects"],
+      isAbsolute: true,
+    });
+  });
+
+  test("resolves current-directory components", () => {
+    const base = parsePath("/home/jose");
+    const input = parsePath("./docs/./projects");
+
+    const joined = joinPath(base, input);
+    const result = normalizePath(joined);
+
+    assert.deepStrictEqual(result, {
+      components: ["home", "jose", "docs", "projects"],
+      isAbsolute: true,
+    });
+  });
+
+  test("resolves parent-directory components", () => {
+    const base = parsePath("/home/jose");
+    const input = parsePath("../docs");
+
+    const joined = joinPath(base, input);
+    const result = normalizePath(joined);
+
+    assert.deepStrictEqual(result, {
+      components: ["home", "docs"],
+      isAbsolute: true,
+    });
+  });
+
+  test("resolves mixed current and parent-directory components", () => {
+    const base = parsePath("/home/jose");
+    const input = parsePath(".././docs/../projects");
+
+    const joined = joinPath(base, input);
+    const result = normalizePath(joined);
+
+    assert.deepStrictEqual(result, {
+      components: ["home", "projects"],
+      isAbsolute: true,
+    });
+  });
+
+  test("preserves an absolute input path during composition", () => {
+    const base = parsePath("/home/jose");
+    const input = parsePath("/var/log/../tmp");
+
+    const joined = joinPath(base, input);
+    const result = normalizePath(joined);
+
+    assert.deepStrictEqual(result, {
+      components: ["var", "tmp"],
+      isAbsolute: true,
+    });
+  });
+
+  test("resolves multiple parent-directory components", () => {
+    const base = parsePath("/home/jose/projects");
+    const input = parsePath("../../docs");
+
+    const joined = joinPath(base, input);
+    const result = normalizePath(joined);
+
+    assert.deepStrictEqual(result, {
+      components: ["home", "docs"],
+      isAbsolute: true,
+    });
+  });
+});
