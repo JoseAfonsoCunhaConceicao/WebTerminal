@@ -3,8 +3,8 @@
  */
 
 export interface Path {
-    components: string[];
-    isAbsolute: boolean;
+    readonly components: readonly string[];
+    readonly isAbsolute: boolean;
 }
 
 /**
