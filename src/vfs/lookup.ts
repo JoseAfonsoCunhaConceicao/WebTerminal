@@ -1,6 +1,5 @@
-import type { Directory } from "./directories.js";
 import type { Path } from "./path.js";
-import type { Node } from "./node.js";
+import type { Node, Directory } from "./node.js";
 import { PathNotFoundError, NotADirectoryError } from "./errors.js";
 
 
