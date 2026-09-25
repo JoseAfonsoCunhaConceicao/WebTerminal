@@ -28,6 +28,14 @@ describe("Session", () => {
 
             assert.deepStrictEqual(session.getCurrentPath(), newPath);
         });
+        it("should store the provided path without modifying it", () => {
+            const session = new Session();
+            const newPath = parsePath("/projects/webterminal");
+
+            session.setCurrentPath(newPath);
+
+            assert.strictEqual(session.getCurrentPath(), newPath);
+        });
     });
 
     describe("addHistory", () => {
