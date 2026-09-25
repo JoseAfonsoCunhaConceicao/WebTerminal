@@ -1,116 +1,96 @@
 # WebTerminal — Project Context
 
-> **Purpose:** Persistent technical context for continuing development of WebTerminal across separate conversations.
->
-> **Important:** Before making architectural or implementation decisions in a new conversation, read this file and inspect the current repository state. This document describes the intended and known state at the time it was last updated; the repository itself is the source of truth if they differ.
->
-> **Last context update:** 2026-09-21
-> **Latest repository commit verified:** `e84b01f5cbb6e2b8280a1e96860dc40f0df04a85` — `docs: document path operations`
+## 1. Project Overview
+
+**WebTerminal** is a TypeScript library for implementing an interactive virtual terminal interface inside web applications.
+
+The terminal is **not a real operating-system terminal**. It is a controlled, deterministic interface over application-defined data and actions.
+
+The initial intended use case is a personal portfolio, where the terminal can expose information such as:
+
+- Projects
+- Skills
+- Articles or blog posts
+- Other portfolio sections
+- Links to external resources such as project websites or GitHub repositories
+
+The virtual filesystem (VFS) is read-only from the user's perspective.
+
+The project is being developed incrementally, with emphasis on correctness, explicit contracts, deterministic behavior, testing, and learning.
 
 ---
 
-## 1. Project
+## 2. Development Philosophy
 
-**Name:** WebTerminal
+The project follows an incremental engineering workflow:
 
-WebTerminal is a TypeScript library for building an interactive terminal-like UI for web applications.
+1. Define the contract and invariants.
+2. Design the simplest correct implementation.
+3. Implement the code.
+4. Add or update tests.
+5. Run the complete test suite and build.
+6. Review the implementation and documentation.
+7. Commit the stable milestone.
+8. Move to the next module.
 
-It simulates a Unix-like terminal over a **virtual filesystem**.
+The goal is not merely to make the library work, but to understand and justify its design.
 
-It is:
+### Engineering principles
 
-- not a real terminal;
-- not a system shell;
-- not Bash/Zsh;
-- not a real host filesystem;
-- not an arbitrary code execution environment.
+The project prioritizes:
 
-The consumer provides the virtual world/content. WebTerminal provides terminal behavior and interaction semantics.
+- Correctness
+- Determinism
+- Explicit behavior
+- Small, composable functions
+- Strong TypeScript typing
+- Minimal mutable state
+- Low memory overhead
+- Reasonable computational efficiency
+- Clear separation of responsibilities
+- Testability
+- Maintainability
+- No unnecessary abstractions
+- No hidden side effects
 
-The project is currently in **early development**.
+Optimization is considered when designing data structures and algorithms, but never at the expense of correctness, safety, or clarity.
 
 ---
 
-## 2. Main Architectural Goal
+# 3. Architecture
 
-The project is designed around a strict separation between domain logic and presentation.
+The project is divided conceptually into two major areas:
 
 ```text
 WebTerminal
+│
 ├── Core
-│   ├── Parser
-│   ├── Session
 │   ├── VFS
-│   ├── Commands
-│   │   └── Command Registry
-│   │       ├── Built-ins
-│   │       └── Custom
-│   └── Documentation
+│   ├── Paths
+│   ├── Lookup
+│   ├── Session
+│   ├── Command parsing
+│   └── Commands
 │
 └── Presentation
-    └── React / Web
+    └── Web / React integration
 ```
 
-### Core
+The **Core** must remain independent of:
 
-The Core owns terminal/domain behavior.
+- DOM
+- Browser APIs
+- React
+- UI frameworks
+- Rendering concerns
 
-It must not depend on:
+The Presentation layer will consume the Core but must not leak UI concerns into it.
 
-- React;
-- the DOM;
-- CSS;
-- browser APIs;
-- `window`;
-- `document`;
-- UI-specific state.
-
-The Core should remain independently testable and usable without a browser.
-
-### Presentation
-
-The Presentation layer is an adapter/rendering layer.
-
-It is responsible for:
-
-- rendering the terminal;
-- capturing user interaction;
-- translating UI events into Core operations;
-- displaying Core results.
-
-Business/domain rules must not be implemented in the presentation layer.
+This separation allows the core behavior to remain deterministic and independently testable.
 
 ---
 
-## 3. Engineering Principles
-
-The project follows a strict engineering discipline inspired by the user's interpretation of NASA/JPL "Power of 10" principles, adapted to TypeScript.
-
-The objective is deterministic, auditable and predictable software rather than literal application of C/C++ rules.
-
-Important principles:
-
-1. Keep Core independent of UI and browser APIs.
-2. Prefer deterministic functions.
-3. Minimize mutable state.
-4. Keep functions small and explicit.
-5. Avoid recursion in Core algorithms unless there is a clear justification.
-6. Prefer iterative algorithms.
-7. Loops should have clearly understandable bounds.
-8. Use explicit types and structured errors.
-9. Keep public interfaces small.
-10. Avoid implicit asynchronous behavior.
-11. Minimize unnecessary allocations and copies.
-12. Optimize memory usage where it does not compromise correctness or verifiability.
-13. Prefer simple, auditable data structures over clever abstractions.
-14. Keep tests deterministic.
-15. `tsc`, linting and tests should be clean before committing.
-
-Performance matters, but micro-optimization must not compromise correctness, maintainability or verification.
-
----
-
-## 4. Technology
+# 4. Technology
 
 Current stack:
 
@@ -118,91 +98,106 @@ Current stack:
 - Node.js
 - npm
 - Node.js built-in test runner
+- ECMAScript modules
 
-Testing intentionally uses Node's built-in test runner rather than Vitest/Jest to keep the dependency footprint small.
+The package uses:
 
-The project currently uses strict TypeScript settings.
+```json
+"type": "module"
+```
 
-Current package configuration includes:
+TypeScript is configured with strict type checking and additional safety-oriented options, including:
 
-- package name: `webterminal`
-- version: `0.1.0`
-- ESM via `"type": "module"`
-- TypeScript `^7.0.2`
-- Node type definitions `^22.20.3`
+- `strict`
+- `noUncheckedIndexedAccess`
+- `exactOptionalPropertyTypes`
+- `verbatimModuleSyntax`
+- `isolatedModules`
+- `noUncheckedSideEffectImports`
+
+Current TypeScript version:
+
+```text
+typescript ^7.0.2
+```
+
+Current Node.js type definitions:
+
+```text
+@types/node ^22.20.3
+```
 
 ---
 
-## 5. Repository Structure
+# 5. Project Structure
 
-Current relevant structure:
+Current repository structure:
 
 ```text
-WebTerminal/
-├── src/
-│   ├── index.ts
-│   └── vfs/
-│       ├── node.ts
-│       ├── file.ts
-│       ├── directories.ts
-│       └── path.ts
-│
-├── test/
-│   ├── tsconfig.json
-│   └── vfs/
-│       └── path.test.ts
-│
+src/
+├── index.ts
+└── vfs/
+    ├── errors.ts
+    ├── lookup.ts
+    ├── node.ts
+    └── path.ts
+
+test/
 ├── tsconfig.json
-├── tsconfig.test.json
-├── package.json
-├── package-lock.json
-├── .gitignore
-├── README.md
-└── Project_Context.md
+└── vfs/
+    ├── lookup.test.ts
+    └── path.test.ts
 ```
 
-The context file is named **`Project_Context.md`**. Do not assume a different capitalization.
+`src/index.ts` is reserved as the future public API entry point.
 
-The directory file is currently named **`directories.ts`**. Do not assume it is named `directory.ts`.
+The public API has not yet been finalized.
 
-### Current implementation scope
-
-The implemented Core is currently limited to the VFS data model and path handling.
-
-Not yet implemented:
-
-- `lookup`;
-- Session;
-- command parser;
-- command registry;
-- built-in commands;
-- structured error types;
-- Presentation layer.
+Lower-level modules may remain directly exported during development when useful for testing. The final public surface will eventually be controlled through `index.ts`.
 
 ---
 
 # 6. Virtual Filesystem
 
-## 6.1 Node
+## 6.1 Purpose
 
-`src/vfs/node.ts`
+The VFS represents the structured content exposed by the virtual terminal.
 
-The common node representation:
+It is intentionally independent of the host filesystem.
 
-```ts
-export interface Node {
-    name: string;
-    kind: "file" | "directory";
-}
-```
+The VFS does not read or write real files.
+
+The initial design is read-only.
 
 ---
 
-## 6.2 File
+## 6.2 Node Model
 
-`src/vfs/file.ts`
+The VFS currently uses a discriminated union:
 
-A file extends `Node` and contains:
+```ts
+export interface File {
+    name: string;
+    kind: "file";
+    content: string;
+}
+
+export interface Directory {
+    name: string;
+    kind: "directory";
+    children: Node[];
+}
+
+export type Node = File | Directory;
+```
+
+The previous `NodeBase` abstraction was deliberately removed.
+
+There are two concrete node types:
+
+### File
+
+A file contains textual content.
 
 ```text
 name
@@ -210,45 +205,33 @@ kind = "file"
 content
 ```
 
-Current interface:
+### Directory
 
-```ts
-export interface File extends Node {
-    content: string;
-}
+A directory contains child nodes.
+
+```text
+name
+kind = "directory"
+children
 ```
+
+The `kind` property acts as the discriminant for type narrowing.
+
+This keeps the model explicit without introducing an unnecessary inheritance hierarchy.
 
 ---
 
-## 6.3 Directory
+# 7. Paths
 
-`src/vfs/directories.ts`
+The path module is complete.
 
-A directory extends `Node` and contains child nodes.
+File:
 
-Current interface is conceptually:
-
-```ts
-export interface Directory extends Node {
-    children: (Directory | File)[];
-}
+```text
+src/vfs/path.ts
 ```
 
-The VFS uses a recursive **data model**, but recursive algorithms are intentionally avoided.
-
-There are no parent pointers.
-
-The intended approach is to maintain the current absolute path in Session rather than storing parent references in every directory.
-
-The current `children` representation is an array. Therefore, a future lookup operation will initially perform linear child searches. Do not introduce an index/map merely for theoretical optimization before there is a demonstrated need.
-
----
-
-# 7. Path Representation
-
-`src/vfs/path.ts`
-
-Current representation:
+The fundamental representation is:
 
 ```ts
 export interface Path {
@@ -257,268 +240,97 @@ export interface Path {
 }
 ```
 
-A path is represented as components plus an absolute/relative flag.
-
-Examples:
+The module currently provides:
 
 ```text
-"/"                  -> { components: [], isAbsolute: true }
-"/home/jose"         -> { components: ["home", "jose"], isAbsolute: true }
-"docs/projects"      -> { components: ["docs", "projects"], isAbsolute: false }
-"../docs"            -> { components: ["..", "docs"], isAbsolute: false }
+parsePath(path)
+normalizePath(path)
+joinPath(basePath, path)
+resolvePath(currentPath, input)
 ```
-
-`Path` is currently an exported TypeScript interface because multiple Core modules need to share the path contract.
-
-This does **not** mean every exported symbol in an internal module is part of the package's public API. The package API will be controlled later through `src/index.ts`.
 
 ---
 
-# 8. `parsePath`
+## 7.1 Path Pipeline
 
-`parsePath(path: string): Path`
+The intended public operation is `resolvePath`.
 
-Responsibilities:
-
-- split a string into path components;
-- detect whether the path is absolute;
-- ignore repeated `/`;
-- ignore trailing separators;
-- preserve `.`;
-- preserve `..`;
-- do not perform normalization.
-
-Examples:
+Conceptually:
 
 ```text
-""                    -> []
-"/"                   -> []
-"home/jose"           -> ["home", "jose"]
-"/home/jose"          -> ["home", "jose"]
-"/home//jose///docs"  -> ["home", "jose", "docs"]
-"./home/./docs"       -> [".", "home", ".", "docs"]
-"../home/../docs"     -> ["..", "home", "..", "docs"]
+input
+  ↓
+parsePath
+  ↓
+joinPath
+  ↓
+normalizePath
+  ↓
+absolute normalized Path
 ```
 
-`parsePath` is intentionally only a parser.
-
-Normalization is a separate operation.
-
-The current implementation is iterative, does not access the VFS, and does not mutate the input string.
+`resolvePath` combines parsing, joining, and normalization into one operation.
 
 ---
 
-# 9. `normalizePath`
+## 7.2 Path Invariants
 
-`normalizePath(path: Path): Path`
+A resolved path:
 
-Responsibilities:
-
-- remove `.`;
-- resolve `..` against preceding components;
-- preserve unresolved `..` for relative paths;
-- discard `..` that would go above root for absolute paths;
-- preserve the absolute/relative flag;
-- never mutate the input `Path`.
-
-Examples:
-
-```text
-"/home/./docs"
-    -> "/home/docs"
-
-"/home/jose/../docs"
-    -> "/home/docs"
-
-"../../docs"
-    -> "../../docs"
-
-"/../docs"
-    -> "/docs"
-```
-
-Important invariants:
-
-### No dot components
-
-A normalized path never contains:
-
-```text
-"."
-```
-
-### Absolute paths contain no parent components
-
-A normalized absolute path never contains:
-
-```text
-".."
-```
-
-### Relative paths may contain unresolved parent components
+- Is absolute.
+- Contains no `"."` components.
+- Contains no `".."` components.
+- Cannot escape the virtual filesystem root.
+- Does not require the target to exist.
+- Does not access the VFS.
+- Does not mutate the current path.
+- Produces independent path component storage.
 
 For example:
 
 ```text
-../../docs
+current path: /home/projects
+input:        ../skills
+
+resolved:     /home/skills
 ```
 
-remains valid as a relative normalized path.
-
-### Idempotence
-
-Normalization is idempotent:
+An absolute input ignores the current path:
 
 ```text
-normalize(normalize(P)) === normalize(P)
+current path: /home/projects
+input:        /docs
+
+resolved:     /docs
 ```
 
-### Immutability
+Root is represented as:
 
-`normalizePath` must not mutate its input and returns a new components array.
-
-The current implementation is iterative and uses an output array as a stack.
-
----
-
-# 10. `joinPath`
-
-`joinPath(basePath: Path, path: Path): Path`
-
-Responsibilities:
-
-- if `path` is absolute, return it unchanged;
-- otherwise append its components to the base path;
-- produce an absolute result;
-- do not normalize;
-- do not mutate either input.
-
-Examples:
-
-```text
-joinPath("/home/jose", "docs")
-    -> "/home/jose/docs"
-
-joinPath("/home/jose", "../docs")
-    -> "/home/jose/../docs"
-
-joinPath("/home/jose", "/var/log")
-    -> "/var/log"
-```
-
-Normalization is intentionally separate.
-
-The current implementation creates a new component array when joining relative paths.
-
-The expected primitive pipeline is:
-
-```text
-string
-  ↓
-parsePath
-  ↓
-joinPath (only if relative)
-  ↓
-normalizePath
-  ↓
-absolute normalized Path
+```ts
+{
+    components: [],
+    isAbsolute: true
+}
 ```
 
 ---
 
-# 11. `resolvePath`
+# 8. VFS Lookup
 
-`resolvePath(currentPath: Path, input: string): Path`
+The lookup module has been implemented.
 
-**Status: implemented and tested.**
-
-This is the semantic/public path-resolution operation built from the path primitives.
-
-Current implementation:
+File:
 
 ```text
-parsePath(input)
-    ↓
-joinPath(currentPath, inputPath)
-    ↓
-normalizePath(joinedPath)
-    ↓
-Path
+src/vfs/lookup.ts
 ```
 
-### Contract
-
-#### `currentPath`
-
-Precondition:
-
-- must be absolute;
-- must be normalized.
-
-It represents the current working directory/path used as the base for relative input.
-
-#### `input`
-
-May be:
-
-- relative;
-- absolute;
-- empty;
-- contain `.`;
-- contain `..`;
-- contain repeated separators;
-- contain trailing separators.
-
-#### Result
-
-The result is always:
-
-- absolute;
-- normalized;
-- free of `.`;
-- free of `..`;
-- independent of VFS existence.
-
-#### Semantics
-
-Relative input:
-
-```text
-resolvePath("/home/jose", "docs/file.txt")
-    -> "/home/jose/docs/file.txt"
-```
-
-Absolute input ignores `currentPath`:
-
-```text
-resolvePath("/home/jose", "/etc/config")
-    -> "/etc/config"
-```
-
-Root is represented by an empty component list with `isAbsolute: true`.
-
-Parent traversal cannot escape the root:
-
-```text
-resolvePath("/home", "../../etc")
-    -> "/etc"
-```
-
-### Architectural boundary
-
-`resolvePath` performs **path resolution only**.
-
-It:
-
-- does not access the VFS;
-- does not check whether the target exists;
-- does not return a `File` or `Directory`;
-- does not produce `PathNotFound` or `NotADirectory`.
+Its responsibility is to resolve an already-parsed `Path` against a VFS tree.
 
 The intended pipeline is:
 
 ```text
-command/input
+input string
     ↓
 resolvePath(currentPath, input)
     ↓
@@ -526,654 +338,617 @@ absolute normalized Path
     ↓
 lookup(root, path)
     ↓
-Node or structured VFS error
+Node
 ```
 
-This separation is intentional and must be preserved.
+`lookup` does not parse or normalize paths.
 
-### Immutability and determinism
+It assumes that its input path is already:
 
-`resolvePath` must not mutate `currentPath`.
+- Absolute
+- Normalized
+- Free of `"."`
+- Free of `".."`
 
-The result must not share the current path's component array.
-
-Repeated calls with the same inputs must produce equivalent results.
+This separation keeps path manipulation and VFS traversal as independent responsibilities.
 
 ---
 
-# 12. Internal Exports vs Package API
+## 8.1 Lookup Contract
 
-The current path module exports:
-
-- `Path`;
-- `parsePath`;
-- `normalizePath`;
-- `joinPath`;
-- `resolvePath`.
-
-This is currently intentional because the primitive operations are independently tested and may be useful to other Core modules.
-
-However, **module-level exports are not automatically the public package API**.
-
-`src/index.ts` is the package's public entry point and is currently intentionally empty apart from a documentation comment.
-
-Later, `src/index.ts` will explicitly expose the supported public API.
-
-Therefore:
+`lookup` receives:
 
 ```text
-module export
-    ≠
-package public API
-```
-
-Do not remove the primitive exports merely to make them "private" before the package API is consolidated.
-
-If stronger package-level encapsulation is required later, `package.json` exports/subpath restrictions can also be considered.
-
----
-
-# 13. Lookup — Immediate Next Module
-
-The next Core module is **VFS lookup**.
-
-It is deliberately separate from `resolvePath`.
-
-### Goal
-
-Given:
-
-```ts
 root: Directory
 path: Path
 ```
 
-locate the corresponding `Node` in the VFS.
-
-Conceptual pipeline:
+and returns:
 
 ```text
-resolvePath(currentPath, input)
-        ↓
-absolute normalized Path
-        ↓
-lookup(root, path)
-        ↓
-File | Directory
+Node
 ```
 
-### Lookup contract to define before implementation
+The function traverses the VFS iteratively.
 
-Preconditions should include:
+For every path component:
 
-- `root` is the VFS root directory;
-- `path` is absolute;
-- `path` is normalized;
-- `path.components` contains neither `.` nor `..`.
+1. The current node must be a directory.
+2. Its children are searched for the requested name.
+3. If the child exists, traversal continues.
+4. If it does not exist, `PathNotFoundError` is thrown.
+5. If traversal attempts to continue through a file, `NotADirectoryError` is thrown.
 
-Questions that must be explicitly decided before implementation:
-
-- exact function signature;
-- how the root path `/` is handled;
-- behavior when a component does not exist;
-- distinction between missing paths and non-directory intermediate nodes;
-- `PathNotFound`;
-- `NotADirectory`;
-- whether errors are thrown or returned;
-- exact structured error representation;
-- complexity and allocation requirements.
-
-Important distinction:
+Root lookup is supported:
 
 ```text
-/home/missing/file.txt
-    → missing component
-
-/home/file.txt/child
-    → existing intermediate node is a File, not a Directory
+/
 ```
 
-These should not be silently conflated.
-
-### Algorithm
-
-The intended lookup traversal is iterative:
-
-```text
-current = root
-
-for each component:
-    find matching child in current.children
-
-    if missing:
-        error
-
-    if more components remain:
-        child must be a Directory
-
-    current = child
-
-return current
-```
-
-Do not introduce recursive traversal.
-
-The current directory representation is an array, so the initial implementation will naturally use linear child lookup.
-
-Do not introduce maps/indexes prematurely.
-
-### Testing strategy
-
-Tests should be defined before implementation and should cover at least:
-
-- root lookup;
-- directory lookup;
-- file lookup;
-- nested lookup;
-- missing final component;
-- missing intermediate component;
-- file used as an intermediate component;
-- immutability of VFS/path inputs;
-- deterministic repeated lookup;
-- relevant structured error cases.
-
-Keep lookup tests separate from path-resolution tests at the conceptual level.
-
-Integration tests can later cover:
-
-```text
-resolvePath → lookup
-```
+resolves directly to the supplied root directory.
 
 ---
 
-# 14. Session
+## 8.2 Lookup Properties
 
-The planned Session model is:
+The lookup operation:
 
-```text
-Session
-├── currentDirectory
-├── history
-└── environment
-```
+- Is iterative.
+- Does not recursively call itself.
+- Does not mutate the VFS.
+- Does not mutate the supplied path.
+- Returns the existing node reference.
+- Is deterministic.
+- Uses constant auxiliary traversal state.
 
-The intended current-directory representation is an absolute normalized `Path`.
+The current child lookup is a linear scan through the directory's `children`.
 
-The Session should guarantee the `currentPath` invariant required by `resolvePath`.
+For a path with depth `d`, the worst-case work is approximately proportional to the total number of children inspected along the traversed path.
 
-Parent pointers are not planned for VFS nodes.
-
-The exact Session implementation has not yet been completed.
-
----
-
-# 15. Commands
-
-Planned V1 built-ins:
-
-```text
-pwd
-ls
-cd
-cat
-tree
-clear
-echo
-help
-man
-history
-whoami
-reset
-apropos
-```
-
-The command system has not yet been implemented.
-
-Custom commands are intended to be first-class.
-
-Command metadata should drive:
-
-- `help`;
-- `man`;
-- `apropos`.
+The current implementation intentionally favors a simple explicit representation over premature indexing or caching.
 
 ---
 
-# 16. Parser Scope
+# 9. VFS Errors
 
-The intended command parser for V1:
+Structured lookup errors are implemented in:
 
-- first token is the command name;
-- tokens beginning with `-` are options;
-- other tokens are arguments;
-- options may appear anywhere;
-- `--` terminates option parsing;
-- grouped flags such as `-lah` are preserved;
-- basic single and double quotes are supported.
+```text
+src/vfs/errors.ts
+```
 
-Explicitly out of scope for the initial parser:
+Current errors:
 
-- pipes;
-- redirection;
-- subshells;
-- background execution;
-- complex shell expansion.
+```text
+PathNotFoundError
+NotADirectoryError
+```
+
+## PathNotFoundError
+
+Thrown when a requested path component does not exist in the current directory.
+
+## NotADirectoryError
+
+Thrown when traversal attempts to continue through a file.
+
+These are separate error types so that higher-level command logic can distinguish different failure conditions without relying on message strings.
 
 ---
 
-# 17. Structured Errors
+# 10. Testing
 
-Planned structured errors include:
+The project uses the Node.js built-in test runner.
 
-```text
-CommandNotFound
-InvalidArguments
-PathNotFound
-NotADirectory
-IsADirectory
-PermissionDenied
-```
-
-Not all of these have been implemented yet.
-
-The next immediate error-design problem is the VFS lookup boundary, especially:
-
-- `PathNotFound`;
-- `NotADirectory`;
-- thrown vs returned errors;
-- typed/structured error representation.
-
-Errors should remain explicit and typed rather than relying on arbitrary strings.
-
----
-
-# 18. Actions
-
-Commands such as `clear` may need to request presentation-layer actions.
-
-The Core must not directly manipulate:
-
-```text
-DOM
-window
-document
-```
-
-Instead, external/UI actions should be represented as Core results/actions which the Presentation layer interprets.
-
----
-
-# 19. Tests
-
-Tests are located under:
-
-```text
-test/
-```
-
-The current test file is:
-
-```text
-test/vfs/path.test.ts
-```
-
-The current suite contains **65 tests**.
-
-The latest local development run reported:
-
-```text
-tests   65
-suites  13
-pass    65
-fail    0
-skipped 0
-todo    0
-```
-
-The test file contains the path primitive tests, path composition tests, and the `resolvePath` suite.
-
-### `parsePath`
-
-Coverage includes:
-
-- empty path;
-- root;
-- relative path;
-- absolute path;
-- multiple components;
-- repeated separators;
-- trailing separators;
-- `.`;
-- `..`;
-- special components in absolute paths.
-
-### `normalizePath`
-
-Coverage includes:
-
-- empty path;
-- root;
-- `.`;
-- single and multiple `..`;
-- unresolved relative `..`;
-- absolute paths above root;
-- mixed `.` and `..`;
-- absolute flag preservation;
-- input immutability;
-- no `.` invariant;
-- no `..` in normalized absolute paths;
-- idempotence;
-- repeated normalization without mutation.
-
-### `joinPath`
-
-Coverage includes:
-
-- relative joining;
-- empty relative path;
-- preservation of unnormalized components;
-- absolute path passthrough;
-- input immutability;
-- new component array for relative joins.
-
-### Path composition
-
-The following pipeline is explicitly tested:
-
-```text
-parsePath
-    ↓
-joinPath
-    ↓
-normalizePath
-```
-
-including:
-
-- simple relative paths;
-- `.`;
-- `..`;
-- mixed `.` and `..`;
-- absolute paths;
-- multiple parent traversals.
-
-### `resolvePath`
-
-Coverage includes:
-
-- simple relative paths;
-- empty input;
-- `.`;
-- relative `..`;
-- complex relative paths;
-- absolute paths;
-- root;
-- multiple parent traversals;
-- root-boundary behavior;
-- repeated separators;
-- nonexistent target paths;
-- absolute/relative result invariants;
-- absence of `.` and `..`;
-- current-path immutability;
-- non-sharing of the current path's component array;
-- deterministic repeated calls;
-- stability when resolving an already resolved path.
-
-One existing test named `does not perform filesystem lookup` only verifies that resolution does not throw for a nonexistent path; it does not instrument or prove absence of a lookup internally. Do not treat that test as a formal observability proof. The architectural contract itself defines that `resolvePath` does not access the VFS.
-
----
-
-# 20. Test Configuration
-
-There are two relevant TypeScript configurations.
-
-## Production
-
-`tsconfig.json`
-
-Builds only:
-
-```text
-src/**/*.ts
-```
-
-Output:
-
-```text
-dist/
-```
-
-The explicit `include` is intentional so that test files do not enter the production build.
-
-The project uses strict TypeScript settings, including:
-
-- `strict`;
-- `verbatimModuleSyntax`;
-- `isolatedModules`;
-- `noUncheckedIndexedAccess`;
-- `exactOptionalPropertyTypes`;
-- `noUncheckedSideEffectImports`;
-- `moduleDetection: "force"`.
-
-## Tests
-
-`tsconfig.test.json`
-
-Builds:
-
-```text
-src/**/*.ts
-test/**/*.ts
-```
-
-Output:
-
-```text
-dist-test/
-```
-
-It is currently self-contained rather than extending the production `tsconfig.json`.
-
-## VS Code test project
-
-`test/tsconfig.json`
-
-Currently:
-
-```json
-{
-  "extends": "../tsconfig.test.json"
-}
-```
-
-This file exists because VS Code's TypeScript project discovery did not correctly associate the test files with `tsconfig.test.json` alone.
-
-It should not be removed without verifying that VS Code continues to recognize the test project correctly.
-
----
-
-# 21. npm Scripts
-
-Current relevant scripts:
+Commands:
 
 ```text
 npm run build
 ```
 
-Builds the production library.
+Builds the production TypeScript source.
 
 ```text
 npm run build:test
 ```
 
-Compiles source and tests to `dist-test`.
+Builds the source and test TypeScript into the test output directory.
 
 ```text
 npm test
 ```
 
-Builds the tests and runs them with Node's built-in test runner.
+Runs the test build followed by the Node.js test runner.
 
-Current test command:
-
-```text
-node --test "dist-test/test/**/*.test.js"
-```
-
----
-
-# 22. Git / Repository Discipline
-
-The project uses small, focused commits.
-
-Recent path-development commits include:
+The current test command is:
 
 ```text
-feat: implement virtual fylesystem path operations (normalizePath and joinPath)
-test: add path operation test suite
-test: strengthen path normalization coverage
-test: cover path operation composition
-feat: add path resolution
-docs: document path operations
+npm run build:test && node --test "dist-test/test/**/*.test.js"
 ```
 
-The latest verified commit is:
+---
+
+## 10.1 Current Validation
+
+The latest local test execution produced:
 
 ```text
-e84b01f5cbb6e2b8280a1e96860dc40f0df04a85
-docs: document path operations
+tests:   75
+passed:  75
+failed:  0
+suites:  14
 ```
 
-Do not mix unrelated refactoring with feature work.
-
-Before committing:
-
-```bash
-npm test
-npm run build
-git diff --check
-```
-
-The working tree should be clean after the commit.
-
-Do not push automatically unless explicitly requested.
-
----
-
-# 23. Current State
-
-The following is implemented:
-
-- VFS `Node` model;
-- `File` model;
-- `Directory` model;
-- `Path` representation;
-- `parsePath`;
-- `normalizePath`;
-- `joinPath`;
-- `resolvePath`;
-- comprehensive path tests;
-- professional JSDoc for all four path operations;
-- production/test TypeScript configuration;
-- README;
-- public entry-point placeholder in `src/index.ts`.
-
-The path module is considered **complete for the current requirements**.
-
-The current path API is conceptually:
+Therefore, the current implementation is validated by:
 
 ```text
-Path
-parsePath
-normalizePath
-joinPath
-resolvePath
+75 passing tests
+0 failing tests
+14 test suites
 ```
 
-The primitives remain exported from the internal module for now because they are independently tested and may be used by other Core modules. Package-level public API exposure will be controlled later through `src/index.ts`.
+---
 
-The path module must not gain VFS lookup responsibilities.
+## 10.2 Path Tests
 
-Not yet implemented:
+The path test suite covers:
 
-- `lookup`;
-- structured VFS errors;
-- Session;
-- command parser;
-- command registry;
-- built-in commands;
-- command documentation system;
-- Presentation layer.
+- Path parsing
+- Absolute paths
+- Relative paths
+- Empty paths
+- Separators
+- Normalization
+- `"."`
+- `".."`.
+- Root behavior
+- Joining
+- Absolute-path replacement
+- Parent traversal
+- Composition between operations
+- Nonexistent paths
+- Immutability
+- Determinism
+
+The tests deliberately verify both output values and important invariants.
 
 ---
 
-# 24. Immediate Next Step
+## 10.3 Lookup Tests
 
-The next module is **VFS lookup**.
+The lookup test suite covers:
 
-Do not start implementation immediately.
+1. Root lookup.
+2. Direct child directory lookup.
+3. Direct child file lookup.
+4. Nested directory lookup.
+5. Deep file lookup.
+6. Missing root child.
+7. Missing nested child.
+8. Traversal through a file.
+9. Path immutability.
+10. Returning the same node reference on repeated lookup.
 
-Follow this sequence:
-
-1. Inspect the current repository.
-2. Read this file.
-3. Verify that the described state still matches the code.
-4. Define the `lookup` contract.
-5. Decide the exact error semantics, especially `PathNotFound` and `NotADirectory`.
-6. Decide whether errors are thrown or returned.
-7. Define complexity and memory requirements.
-8. Define the iterative traversal algorithm.
-9. Define tests before implementation.
-10. Implement `lookup`.
-11. Run the complete test suite.
-12. Document `lookup`.
-13. Commit the completed milestone.
-
-Do not mix `lookup` with Session or command implementation.
+The tests use a manually constructed VFS tree.
 
 ---
 
-# 25. Important Working Convention
+# 11. Current VFS Architecture
 
-The user is learning TypeScript while building this project.
+The current VFS-related architecture is:
 
-When introducing a new technical concept:
+```text
+                 ┌───────────────┐
+                 │  Input string │
+                 └───────┬───────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │  resolvePath()  │
+                └────────┬────────┘
+                         │
+                         ▼
+              Absolute normalized Path
+                         │
+                         ▼
+                 ┌───────────────┐
+                 │    lookup()   │
+                 └───────┬───────┘
+                         │
+                         ▼
+                       Node
+                    ┌────┴────┐
+                    │         │
+                  File    Directory
+```
 
-1. Explain the concept first.
-2. Explain why it is needed.
-3. Explain the intended approach.
-4. Let the user implement the production code.
-5. Review and correct the implementation.
+This establishes a clear separation:
 
-**Do not provide finalized production code unless the user explicitly asks for it.**
-
-Tests are an exception: the user has explicitly chosen not to spend significant time writing test code and may request finalized tests directly.
-
-When reviewing code, prioritize:
-
-1. correctness;
-2. architectural consistency;
-3. determinism;
-4. memory usage;
-5. algorithmic complexity;
-6. TypeScript type safety;
-7. readability and auditability.
-
-Do not introduce abstractions merely for abstraction's sake.
-
-The user's general project preference is to favor memory-efficient and computationally efficient solutions where this does not compromise correctness, safety or clarity.
+```text
+Path logic       → determines WHAT path is requested
+Lookup logic     → determines WHICH node exists there
+VFS model        → represents the data
+Errors           → represents failure conditions
+```
 
 ---
 
-# 26. Source of Truth
+# 12. Planned Terminal Model
 
-This file is a persistent handoff document, not a substitute for the repository.
+The terminal is intended to expose a CLI-like interface over the VFS.
 
-If this document conflicts with the actual code:
+The current planned command set includes:
 
-**the repository wins.**
+```text
+pwd
+ls [OPTIONS] [PATH]
+cd [PATH]
+cat [OPTIONS] <FILE>...
+tree [OPTIONS] [PATH]
+clear
+echo [OPTIONS] [TEXT]...
+help [COMMAND]
+man <COMMAND>
+history [OPTIONS]
+whoami
+reset
+```
 
-Update this file whenever an architectural decision, important invariant, project state, or development direction changes.
+The exact command semantics, option syntax, error behavior, and output representation will be defined before implementation.
 
-A future conversation should begin by reading this file and checking the current repository state before continuing development.
+The terminal should behave like a CLI from the user's perspective while remaining a controlled application-level abstraction.
+
+---
+
+# 13. Planned Session Model
+
+A terminal session will eventually maintain state such as:
+
+- Current working directory
+- Command history
+- Activity since session start
+- Other explicitly defined session state
+
+The `reset` command will clear session state and return the terminal to its initial state.
+
+Session state should remain independent from the immutable/read-only VFS structure.
+
+---
+
+# 14. Planned Content Model
+
+The VFS is intended primarily for structured textual content.
+
+Potential content includes:
+
+```text
+/
+├── projects/
+│   ├── project-a/
+│   │   └── README.md
+│   ├── project-b/
+│   │   └── README.md
+│   └── ...
+├── skills/
+│   └── ...
+├── blog/
+│   └── ...
+└── ...
+```
+
+Directories can represent high-level sections.
+
+Files can contain Markdown or plain-text content.
+
+Project directories may expose commands or links to external resources such as:
+
+- Project websites
+- GitHub repositories
+- Other relevant pages
+
+The exact content abstraction will be defined later.
+
+---
+
+# 15. Presentation Layer
+
+The Core must not depend on the eventual UI implementation.
+
+A future Presentation layer may provide:
+
+- Terminal rendering
+- Input handling
+- Command output rendering
+- Scroll behavior
+- Keyboard interaction
+- React integration
+
+However, the Core should expose data and behavior rather than manipulate UI elements.
+
+For example, a command should conceptually produce a structured result that the Presentation layer can render, rather than directly modifying the DOM.
+
+---
+
+# 16. Public API
+
+`src/index.ts` is the designated public entry point.
+
+The public API has not yet been finalized.
+
+For now, internal modules may remain exported directly when necessary for development and testing.
+
+Before the project reaches a stable public API, the exported surface should be intentionally reviewed so that implementation details are not accidentally exposed.
+
+The expected principle is:
+
+```text
+Internal implementation
+        ↓
+Controlled public API
+        ↓
+Consumer
+```
+
+rather than exposing the entire internal module structure.
+
+---
+
+# 17. Important Design Decisions
+
+## 17.1 No VFS existence check during path resolution
+
+`resolvePath` only resolves paths.
+
+It does not check whether the resulting path exists.
+
+Existence belongs to `lookup`.
+
+This allows operations such as path construction to remain independent of the filesystem.
+
+---
+
+## 17.2 Path resolution and lookup are separate
+
+The project deliberately uses:
+
+```text
+resolvePath()
+```
+
+followed by:
+
+```text
+lookup()
+```
+
+rather than combining both responsibilities.
+
+This keeps:
+
+- Path manipulation
+- Filesystem traversal
+
+independently testable.
+
+---
+
+## 17.3 VFS is read-only
+
+The initial VFS model does not expose terminal-side mutation operations.
+
+The user interacts with the representation, but does not modify the underlying VFS.
+
+If mutation is ever introduced, it should be an explicit architectural decision rather than an accidental consequence of exposing internal arrays or objects.
+
+---
+
+## 17.4 Iterative algorithms by default
+
+Where recursion provides no meaningful advantage, iterative implementations are preferred.
+
+This is particularly relevant to:
+
+- Path traversal
+- VFS traversal
+- Future tree operations
+
+The objective is predictable stack usage and explicit control flow.
+
+---
+
+## 17.5 Avoid premature abstraction
+
+The project intentionally prefers straightforward implementations when the current requirements do not justify additional abstractions.
+
+Examples:
+
+- Directory children are currently represented as an array.
+- Lookup currently performs a linear child search.
+- `NodeBase` was removed because it did not provide enough value to justify its abstraction.
+
+More sophisticated indexing or data structures can be introduced later if actual requirements justify them.
+
+---
+
+# 18. Current Repository State
+
+The following milestones are complete:
+
+### VFS model
+
+- File representation
+- Directory representation
+- Discriminated `Node` union
+- Removal of the previous `NodeBase` abstraction
+
+### Path system
+
+- `Path`
+- `parsePath`
+- `normalizePath`
+- `joinPath`
+- `resolvePath`
+- Path invariants
+- Path tests
+
+### Lookup system
+
+- `lookup`
+- Iterative VFS traversal
+- Root lookup
+- Nested lookup
+- File traversal detection
+- Missing-path detection
+
+### Error system
+
+- `PathNotFoundError`
+- `NotADirectoryError`
+
+### Validation
+
+- Automated test suite
+- 75 passing tests
+- 0 failures
+
+---
+
+# 19. Next Development Stage
+
+The VFS foundation is now sufficiently established to move beyond basic path and lookup operations.
+
+The next module should be selected by considering the dependencies of the terminal architecture.
+
+The logical progression is:
+
+```text
+VFS model
+   ↓
+Path operations
+   ↓
+Lookup
+   ↓
+Session state
+   ↓
+Command representation / parser
+   ↓
+Command execution
+   ↓
+Terminal results
+   ↓
+Public API
+   ↓
+Presentation integration
+```
+
+Before implementing the next module, its contract and invariants should be defined explicitly.
+
+No production implementation should be written until the responsibility and boundaries of the module are clear.
+
+---
+
+# 20. Development Workflow for Future Modules
+
+For every new module:
+
+### Step 1 — Define the responsibility
+
+State precisely what the module does and what it does not do.
+
+### Step 2 — Define the public contract
+
+Identify:
+
+- Inputs
+- Outputs
+- Errors
+- Invariants
+- Mutation behavior
+- Ownership of returned data
+
+### Step 3 — Identify interactions
+
+Determine which existing modules it depends on.
+
+### Step 4 — Design the simplest appropriate representation
+
+Avoid introducing abstractions that are not currently justified.
+
+### Step 5 — Implement
+
+Implementation should follow the previously defined contract.
+
+### Step 6 — Test
+
+Test:
+
+- Normal cases
+- Boundary cases
+- Invalid input
+- Invariants
+- Immutability
+- Determinism
+- Error behavior
+
+### Step 7 — Build and run the complete test suite
+
+Do not rely only on tests for the new module.
+
+### Step 8 — Review documentation
+
+Public and important internal functions should have professional JSDoc describing their contracts and failure behavior.
+
+### Step 9 — Commit
+
+Commit only after the milestone is stable.
+
+### Step 10 — Update this document
+
+`Project_Context.md` must remain sufficiently accurate that another conversation can continue development without reconstructing the project history.
+
+---
+
+# 21. Current Status Summary
+
+As of the latest validated state:
+
+```text
+Project:
+    WebTerminal
+
+Language:
+    TypeScript
+
+Architecture:
+    Core-first, presentation-independent
+
+VFS:
+    Implemented
+
+Path system:
+    Complete
+
+Lookup:
+    Implemented
+
+Structured lookup errors:
+    Implemented
+
+Automated tests:
+    75 passing
+    0 failing
+    14 suites
+
+Public API:
+    Not finalized
+
+Presentation layer:
+    Not implemented
+
+Next major area:
+    Session / command architecture
+```
+
+The project currently has a functional foundation for resolving and locating nodes inside a deterministic, read-only virtual filesystem.
+
+The next work should build on this foundation rather than extending the VFS prematurely.
