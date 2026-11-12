@@ -36,7 +36,11 @@ export function executeInvocation(
         return errorResult(`${invocation.command}: command not found`, 127);
     }
 
-    return handler(invocation, context);
+    const effectiveContext: ExecutionContext = context.registry
+        ? context
+        : { root: context.root, session: context.session, registry };
+
+    return handler(invocation, effectiveContext);
 }
 
 /**

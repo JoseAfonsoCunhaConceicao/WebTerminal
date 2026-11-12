@@ -8,6 +8,10 @@ import { echoCommand } from "./echo.js";
 import { cdCommand } from "./cd.js";
 import { lsCommand } from "./ls.js";
 import { catCommand } from "./cat.js";
+import { clearCommand } from "./clear.js";
+import { resetCommand } from "./reset.js";
+import { historyCommand } from "./history.js";
+import { helpCommand } from "./help.js";
 
 /**
  * Registers all core built-in commands into the provided registry.
@@ -24,6 +28,8 @@ export function registerBuiltinCommands(registry: CommandRegistry): void {
     registry.register("cd", cdCommand);
     registry.register("ls", lsCommand);
     registry.register("cat", catCommand);
+    registry.register("clear", clearCommand);
+    registry.register("reset", resetCommand);
+    registry.register("history", historyCommand);
+    registry.register("help", helpCommand);
 }
-
-
