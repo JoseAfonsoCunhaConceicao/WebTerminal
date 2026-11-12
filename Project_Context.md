@@ -805,11 +805,27 @@ The following milestones are complete:
 - `PathNotFoundError`
 - `NotADirectoryError`
 
+### Session system
+
+- `Session` class managing `currentPath` and `history`
+- Independent of VFS and command execution
+- Session tests
+
+### Command system
+
+- `CommandInvocation` representation
+- `parseCommand` parsing options and arguments with `--` terminator support
+- `tokenize` converting raw command lines into token streams
+- Support for unquoted, single-quoted, double-quoted, and escaped characters
+- Structured `TokenizerError` with errors-as-values contract (`TokenizeResult`)
+- Command parser and tokenizer tests
+
 ### Validation
 
 - Automated test suite
-- 75 passing tests
+- 122 passing tests
 - 0 failures
+- 28 test suites
 
 ---
 
@@ -934,10 +950,16 @@ Lookup:
 Structured lookup errors:
     Implemented
 
+Session:
+    Implemented
+
+Command system:
+    Tokenizer and parser implemented
+
 Automated tests:
-    75 passing
+    122 passing
     0 failing
-    14 suites
+    28 suites
 
 Public API:
     Not finalized
@@ -946,7 +968,7 @@ Presentation layer:
     Not implemented
 
 Next major area:
-    Session / command architecture
+    Command execution / built-in commands
 ```
 
 The project currently has a functional foundation for resolving and locating nodes inside a deterministic, read-only virtual filesystem.
