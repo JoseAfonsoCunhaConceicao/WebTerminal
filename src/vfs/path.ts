@@ -170,3 +170,30 @@ export function resolvePath( currentPath: Path, input: string): Path {
 
     return normalizedPath;
 }
+
+/**
+ * Formats a structured Path into a canonical string representation.
+ *
+ * @param path - The Path object to format.
+ *
+ * @returns The string representation of the path.
+ *
+ * @remarks
+ * An absolute path with no components formats as `/`.
+ * A relative path with no components formats as an empty string.
+ */
+export function formatPath(path: Path): string {
+    if (typeof path !== "object" || path === null) {
+        throw new TypeError("Path must be a non-null object.");
+    }
+    if (!Array.isArray(path.components)) {
+        throw new TypeError("Path components must be an array.");
+    }
+
+    if (path.components.length === 0) {
+        return path.isAbsolute ? "/" : "";
+    }
+
+    const joined = path.components.join("/");
+    return path.isAbsolute ? `/${joined}` : joined;
+}

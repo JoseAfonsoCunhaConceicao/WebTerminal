@@ -2,6 +2,7 @@ import { describe, test, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  formatPath,
   joinPath,
   normalizePath,
   parsePath,
@@ -794,5 +795,38 @@ describe("resolvePath", () => {
 
             assert.deepStrictEqual(second, first);
         });
+    });
+});
+
+describe("formatPath", () => {
+    it("formats the root path", () => {
+        const path: Path = { components: [], isAbsolute: true };
+        assert.equal(formatPath(path), "/");
+    });
+
+    it("formats an empty relative path", () => {
+        const path: Path = { components: [], isAbsolute: false };
+        assert.equal(formatPath(path), "");
+    });
+
+    it("formats an absolute path with one component", () => {
+        const path: Path = { components: ["home"], isAbsolute: true };
+        assert.equal(formatPath(path), "/home");
+    });
+
+    it("formats an absolute path with multiple components", () => {
+        const path: Path = { components: ["home", "user", "projects"], isAbsolute: true };
+        assert.equal(formatPath(path), "/home/user/projects");
+    });
+
+    it("formats a relative path with multiple components", () => {
+        const path: Path = { components: ["docs", "readme.txt"], isAbsolute: false };
+        assert.equal(formatPath(path), "docs/readme.txt");
+    });
+
+    it("throws TypeError if path is invalid", () => {
+        assert.throws(() => {
+            formatPath(null as unknown as Path);
+        }, TypeError);
     });
 });

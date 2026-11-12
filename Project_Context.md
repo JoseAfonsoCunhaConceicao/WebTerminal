@@ -818,14 +818,19 @@ The following milestones are complete:
 - `tokenize` converting raw command lines into token streams
 - Support for unquoted, single-quoted, double-quoted, and escaped characters
 - Structured `TokenizerError` with errors-as-values contract (`TokenizeResult`)
-- Command parser and tokenizer tests
+- `CommandResult` explicit execution outcome (`exitCode`, `output`, `error`)
+- `ExecutionContext` environmental interface (`root`, `session`)
+- `CommandRegistry` and `createCommandRegistry`
+- Built-in commands: `pwd`, `echo`, `cd`
+- `executeInvocation` and `executeLine` command execution pipeline
+- Command parser, tokenizer, built-ins, and executor tests
 
 ### Validation
 
 - Automated test suite
-- 122 passing tests
+- 145 passing tests
 - 0 failures
-- 28 test suites
+- 37 test suites
 
 ---
 
@@ -954,12 +959,12 @@ Session:
     Implemented
 
 Command system:
-    Tokenizer and parser implemented
+    Tokenizer, parser, executor, and built-ins (pwd, echo, cd) implemented
 
 Automated tests:
-    122 passing
+    145 passing
     0 failing
-    28 suites
+    37 suites
 
 Public API:
     Not finalized
@@ -968,7 +973,7 @@ Presentation layer:
     Not implemented
 
 Next major area:
-    Command execution / built-in commands
+    Additional built-in commands (ls, cat, tree, clear) and public API definition
 ```
 
 The project currently has a functional foundation for resolving and locating nodes inside a deterministic, read-only virtual filesystem.
