@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebTerminal — Interactive Showcase</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(135deg, #0b0f19 0%, #1a1f2c 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            color: #f0f6fc;
+        }
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+        header p {
+            color: #8b949e;
+            font-size: 0.95rem;
+        }
+        .window-frame {
+            width: 100%;
+            max-width: 900px;
+            height: 560px;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .title-bar {
+            height: 38px;
+            background-color: #161b22;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            user-select: none;
+        }
+        .traffic-lights {
+            display: flex;
+            gap: 8px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-red { background-color: #ff5f56; }
+        .dot-yellow { background-color: #ffbd2e; }
+        .dot-green { background-color: #27c93f; }
+        .window-title {
+            flex: 1;
+            text-align: center;
+            font-family: monospace;
+            font-size: 13px;
+            color: #8b949e;
+            padding-right: 48px;
+        }
+        .terminal-mount {
+            flex: 1;
+            overflow: hidden;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #6e7681;
+            text-align: center;
+        }
+        footer code {
+            color: #58a6ff;
+            background: rgba(88, 166, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>WebTerminal</h1>
+        <p>Zero-recursion, high-performance virtual terminal with NASA JPL Power of 10 safety.</p>
+    </header>
+
+    <main class="window-frame">
+        <div class="title-bar">
+            <div class="traffic-lights">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+            </div>
+            <div class="window-title">visitor@webterminal: ~</div>
+        </div>
+        <div id="terminal-container" class="terminal-mount"></div>
+    </main>
+
+    <footer>
+        <p>Built with TypeScript &bull; 239 automated tests &bull; Try typing <code>help</code>, <code>tree</code>, or pressing <code>Tab</code></p>
+    </footer>
+
+    <script type="module">
+        import {
+            WebTerminal,
+            TerminalController,
+            mountTerminal
+        } from "../dist/index.js";
+
+        const sampleVFS = {
+            name: "",
+            kind: "directory",
+            children: [
+                {
+                    name: "README.md",
+                    kind: "file",
+                    content: "# Welcome to WebTerminal\nAn interactive virtual terminal engine built with NASA JPL Power of 10 standards.\nType 'help' to view all commands or 'tree' to see the filesystem hierarchy."
+                },
+                {
+                    name: "about.txt",
+                    kind: "file",
+                    content: "Developer: José Conceição\nSpecialization: Elite Software Architecture & High-Performance Engineering\nPhilosophy: Strict layer decoupling, zero recursion, and bounded deterministic execution."
+                },
+                {
+                    name: "skills",
+                    kind: "directory",
+                    children: [
+                        {
+                            name: "languages.txt",
+                            kind: "file",
+                            content: "Languages:\n- TypeScript / JavaScript (Modern ES)\n- Python / Systems\n- SQL / Relational Data"
+                        },
+                        {
+                            name: "architecture.txt",
+                            kind: "file",
+                            content: "Architectural Principles:\n- NASA / JPL Power of 10 rules\n- Errors-as-values (Zero unexpected exceptions)\n- Bounded memory allocations\n- Strictly decoupled GUI vs Engine"
+                        }
+                    ]
+                },
+                {
+                    name: "projects",
+                    kind: "directory",
+                    children: [
+                        {
+                            name: "webterminal",
+                            kind: "directory",
+                            children: [
+                                {
+                                    name: "overview.txt",
+                                    kind: "file",
+                                    content: "WebTerminal Core:\n- 13 Unix built-ins (pwd, cd, ls, cat, tree, history, man, apropos, help, echo, clear, reset, whoami)\n- O(1) manual documentation index\n- Universal headless controller & DOM adapter"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: "contact.txt",
+                    kind: "file",
+                    content: "Get in touch:\n- GitHub: https://github.com/joseconceicao\n- Project: WebTerminal"
+                }
+            ]
+        };
+
+        const terminal = new WebTerminal({
+            root: sampleVFS,
+            initialPath: "/"
+        });
+
+        const controller = new TerminalController({
+            terminal,
+            user: "visitor",
+            host: "webterminal",
+            welcomeBanner: "=======================================================\n WebTerminal v0.1.0 — NASA Power of 10 Architecture\n Type 'help' for available commands, 'tree' for files.\n Press [Tab] to auto-complete commands and paths.\n======================================================="
+        });
+
+        const mountElement = document.getElementById("terminal-container");
+        mountTerminal(mountElement, controller, { autoFocus: true });
+    </script>
+</body>
+</html>
+

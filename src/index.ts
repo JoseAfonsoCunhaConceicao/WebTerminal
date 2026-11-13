@@ -34,6 +34,9 @@ export { DEFAULT_USER } from "./command/builtins/whoami.js";
 export { TerminalController } from "./ui/controller.js";
 export { computeCompletion } from "./ui/completion.js";
 export { dispatchKeyEvent } from "./ui/keymap.js";
+export { mountTerminal } from "./ui/dom.js";
+export type { MountTerminalOptions } from "./ui/dom.js";
+export { injectTerminalStyles, TERMINAL_CSS } from "./ui/styles.js";
 export {
     insertAt,
     deleteBackwardAt,
