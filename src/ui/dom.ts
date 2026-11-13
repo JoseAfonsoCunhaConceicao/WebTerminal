@@ -3,7 +3,7 @@
  */
 
 import type { TerminalController } from "./controller.js";
-import type { TerminalLine, TerminalViewState, Unsubscribe } from "./types.js";
+import type { TerminalLine, TerminalModalState, TerminalViewState, Unsubscribe } from "./types.js";
 import { injectTerminalStyles } from "./styles.js";
 
 /**
@@ -15,10 +15,43 @@ export interface MountTerminalOptions {
     readonly onStateChange?: ((state: TerminalViewState) => void) | undefined;
 }
 
-/**
- * Creates and renders a static terminal line element.
- */
-function createLineElement(doc: Document, line: TerminalLine): HTMLElement {
+function renderLineText(
+    doc: Document,
+    text: string,
+    onFileClick?: (filename: string) => void
+): HTMLElement {
+    const span = doc.createElement("span");
+    if (!onFileClick || (!text.includes(".txt") && !text.includes(".md"))) {
+        span.textContent = text;
+        return span;
+    }
+
+    const tokens = text.split(/(\s+)/);
+    const count = tokens.length;
+    for (let idx = 0; idx < count; idx++) {
+        const token = tokens[idx]!;
+        const clean = token.replace(/^[├──└──│\s]+/, "").trim();
+        if ((clean.endsWith(".txt") || clean.endsWith(".md")) && !clean.includes("/")) {
+            const link = doc.createElement("span");
+            link.className = "wt-file-link";
+            link.textContent = token;
+            link.onclick = (ev) => {
+                ev.stopPropagation();
+                onFileClick(clean);
+            };
+            span.appendChild(link);
+        } else {
+            span.appendChild(doc.createTextNode(token));
+        }
+    }
+    return span;
+}
+
+function createLineElement(
+    doc: Document,
+    line: TerminalLine,
+    onFileClick?: (filename: string) => void
+): HTMLElement {
     const div = doc.createElement("div");
     div.className = `wt-line wt-line-${line.kind}`;
 
@@ -29,15 +62,10 @@ function createLineElement(doc: Document, line: TerminalLine): HTMLElement {
         div.appendChild(promptSpan);
     }
 
-    const textSpan = doc.createElement("span");
-    textSpan.textContent = line.text;
-    div.appendChild(textSpan);
+    div.appendChild(renderLineText(doc, line.text, onFileClick));
     return div;
 }
 
-/**
- * Updates the active prompt, input buffer, and blinking cursor display.
- */
 function updateActiveInput(
     doc: Document,
     activeRow: HTMLElement,
@@ -52,27 +80,69 @@ function updateActiveInput(
 
     const beforeText = state.input.slice(0, state.cursorIndex);
     const afterText = state.input.slice(state.cursorIndex);
-
-    const beforeNode = doc.createTextNode(beforeText);
-    activeRow.appendChild(beforeNode);
+    activeRow.appendChild(doc.createTextNode(beforeText));
 
     const cursorSpan = doc.createElement("span");
     cursorSpan.className = "wt-cursor";
     activeRow.appendChild(cursorSpan);
 
-    const afterNode = doc.createTextNode(afterText);
-    activeRow.appendChild(afterNode);
+    activeRow.appendChild(doc.createTextNode(afterText));
 }
 
-/**
- * Mounts an interactive terminal into any DOM element container.
- *
- * @param container - Target HTMLElement container.
- * @param controller - TerminalController instance.
- * @param options - Optional configuration options.
- *
- * @returns An unmount cleanup function.
- */
+function createModalWindow(
+    doc: Document,
+    modal: TerminalModalState,
+    onClose: () => void
+): HTMLElement {
+    const win = doc.createElement("div");
+    win.className = "wt-modal-window";
+
+    const header = doc.createElement("div");
+    header.className = "wt-modal-header";
+
+    const title = doc.createElement("span");
+    title.textContent = modal.title;
+    header.appendChild(title);
+
+    const closeBtn = doc.createElement("button");
+    closeBtn.className = "wt-modal-close";
+    closeBtn.textContent = "✕";
+    closeBtn.onclick = () => onClose();
+    header.appendChild(closeBtn);
+
+    const body = doc.createElement("div");
+    body.className = "wt-modal-body";
+    body.textContent = modal.content;
+
+    win.appendChild(header);
+    win.appendChild(body);
+    return win;
+}
+
+function renderModalElement(
+    doc: Document,
+    container: HTMLElement,
+    modal: TerminalModalState | null | undefined,
+    onClose: () => void
+): void {
+    const existing = container.querySelector(".wt-modal-backdrop");
+    if (existing) {
+        existing.remove();
+    }
+    if (!modal) {
+        return;
+    }
+
+    const backdrop = doc.createElement("div");
+    backdrop.className = "wt-modal-backdrop";
+    backdrop.onclick = (event) => {
+        if (event.target === backdrop) onClose();
+    };
+
+    backdrop.appendChild(createModalWindow(doc, modal, onClose));
+    container.appendChild(backdrop);
+}
+
 export function mountTerminal(
     container: HTMLElement,
     controller: TerminalController,
@@ -100,13 +170,18 @@ export function mountTerminal(
     container.appendChild(linesBox);
     container.appendChild(activeRow);
 
+    const onFileClick = (filename: string): void => {
+        controller.openFile(filename);
+    };
+
     const unsubscribe = controller.subscribe((state) => {
         linesBox.innerHTML = "";
         const lineCount = state.lines.length;
         for (let idx = 0; idx < lineCount; idx++) {
-            linesBox.appendChild(createLineElement(doc, state.lines[idx]!));
+            linesBox.appendChild(createLineElement(doc, state.lines[idx]!, onFileClick));
         }
         updateActiveInput(doc, activeRow, state);
+        renderModalElement(doc, container, state.activeModal, () => controller.closeModal());
         container.scrollTop = container.scrollHeight;
         options?.onStateChange?.(state);
     });
@@ -118,12 +193,8 @@ export function mountTerminal(
         }
     };
 
-    const onClick = (): void => {
-        container.focus();
-    };
-
     container.addEventListener("keydown", onKeyDown);
-    container.addEventListener("click", onClick);
+    container.addEventListener("click", () => container.focus());
 
     if (options?.autoFocus !== false) {
         container.focus();
@@ -132,9 +203,7 @@ export function mountTerminal(
     return () => {
         unsubscribe();
         container.removeEventListener("keydown", onKeyDown);
-        container.removeEventListener("click", onClick);
         container.classList.remove("wt-container");
         container.innerHTML = "";
     };
 }
-

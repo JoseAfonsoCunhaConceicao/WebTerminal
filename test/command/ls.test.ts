@@ -170,5 +170,83 @@ describe("ls command", () => {
         assert.equal(result.exitCode, 1);
         assert.equal(result.error, "ls: cannot access 'file.txt/sub': No such file or directory");
     });
+
+    it("formats output using long listing format with -l", () => {
+        const context: ExecutionContext = {
+            root: createTestVFS(),
+            session: new Session(),
+        };
+
+        const result = lsCommand(
+            { command: "ls", options: ["-l"], arguments: [] },
+            context
+        );
+
+        assert.equal(result.exitCode, 0);
+        assert.match(result.output, /drwxr-xr-x\s+1 visitor\s+staff\s+\d+\s+empty_dir/);
+        assert.match(result.output, /-rw-r--r--\s+1 visitor\s+staff\s+\d+\s+file\.txt/);
+    });
+
+    it("supports grouped short options like -la", () => {
+        const context: ExecutionContext = {
+            root: createTestVFS(),
+            session: new Session(),
+        };
+
+        const result = lsCommand(
+            { command: "ls", options: ["-la"], arguments: [] },
+            context
+        );
+
+        assert.equal(result.exitCode, 0);
+        assert.match(result.output, /\./);
+        assert.match(result.output, /\.\./);
+        assert.match(result.output, /drwxr-xr-x/);
+    });
+
+    it("sorts in reverse alphabetical order with -r", () => {
+        const context: ExecutionContext = {
+            root: createTestVFS(),
+            session: new Session(),
+        };
+
+        const result = lsCommand(
+            { command: "ls", options: ["-r"], arguments: [] },
+            context
+        );
+
+        assert.equal(result.exitCode, 0);
+        assert.equal(result.output, "projects  file.txt  empty_dir");
+    });
+
+    it("appends indicator slash to directories with -F", () => {
+        const context: ExecutionContext = {
+            root: createTestVFS(),
+            session: new Session(),
+        };
+
+        const result = lsCommand(
+            { command: "ls", options: ["-F"], arguments: [] },
+            context
+        );
+
+        assert.equal(result.exitCode, 0);
+        assert.equal(result.output, "empty_dir/  file.txt  projects/");
+    });
+
+    it("lists directory itself rather than its contents with -d", () => {
+        const context: ExecutionContext = {
+            root: createTestVFS(),
+            session: new Session(),
+        };
+
+        const result = lsCommand(
+            { command: "ls", options: ["-d"], arguments: ["empty_dir"] },
+            context
+        );
+
+        assert.equal(result.exitCode, 0);
+        assert.equal(result.output, "empty_dir");
+    });
 });
 

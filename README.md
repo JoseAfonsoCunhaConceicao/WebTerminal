@@ -1,7 +1,7 @@
 # WebTerminal
 
 [![npm version](https://img.shields.io/badge/version-0.1.0-blue.svg)](package.json)
-[![tests](https://img.shields.io/badge/tests-239%20passing-brightgreen.svg)](test/)
+[![tests](https://img.shields.io/badge/tests-257%20passing-brightgreen.svg)](test/)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![NASA JPL Standards](https://img.shields.io/badge/standard-NASA%20Power%20of%2010-orange.svg)](Project_Context.md)
 
@@ -14,9 +14,10 @@ Built following strict **NASA / JPL Power of 10** reliability standards: zero re
 ## Key Features
 
 - **Virtual Filesystem (VFS):** Hierarchical, read-only in-memory filesystem with deep runtime immutability (`freezeVFS`).
-- **13 Built-in Unix Commands:** `pwd`, `cd`, `ls`, `cat`, `tree`, `history`, `man`, `apropos`, `help`, `echo`, `clear`, `reset`, and `whoami`.
+- **14 Built-in Unix Commands:** `pwd`, `cd`, `ls` (with `-l`, `-a`, `-r`, `-F`, `-d`), `cat`, `tree` (with `-L <level>`, `-a`, `-d`, `-f`), `open` (with interactive `.txt` modal viewer and `view` alias), `history`, `man`, `apropos`, `help`, `echo`, `clear`, `reset`, and `whoami`.
 - **Fault-Isolated Execution:** Handlers run inside a containment boundary preventing unexpected exceptions from crashing host applications.
 - **Universal Headless Controller:** Framework-agnostic interactive state controller (`TerminalController`) compatible with **React**, **Vue**, **Svelte**, **Vanilla HTML**, and **Flutter Web**.
+- **Interactive File Viewer Modal:** Built-in modal window to inspect and read text files with keyboard navigation (`Esc` to close) and clickable files in terminal output.
 - **Smart Tab Completion:** Automatic completion for command names and VFS directory paths.
 - **History & Line Editing:** Standard terminal shortcuts (`Enter`, `Backspace`, `Delete`, `Arrows`, `Home`, `End`, `Ctrl+C`, `Ctrl+L`).
 - **Ultra-lightweight:** Zero external runtime dependencies. Compiles to ES modules with full tree-shaking support (`sideEffects: false`).

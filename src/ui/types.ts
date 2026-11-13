@@ -20,6 +20,14 @@ export interface TerminalLine {
 }
 
 /**
+ * State of an active modal popup window (e.g. text file viewer).
+ */
+export interface TerminalModalState {
+    readonly title: string;
+    readonly content: string;
+}
+
+/**
  * Immutable snapshot of the terminal's visible state.
  */
 export interface TerminalViewState {
@@ -27,6 +35,7 @@ export interface TerminalViewState {
     readonly input: string;
     readonly cursorIndex: number;
     readonly prompt: string;
+    readonly activeModal?: TerminalModalState | null | undefined;
 }
 
 /**

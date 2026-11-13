@@ -105,6 +105,20 @@ const MANUAL_DATABASE: readonly ManualPage[] = Object.freeze([
         shortDescription: "Search manual page names and descriptions",
         description: "Searches the manual database for entries whose names or descriptions match the keyword.",
     },
+    {
+        name: "open",
+        section: 1,
+        synopsis: "open <FILE>",
+        shortDescription: "Open and display file contents in the viewer",
+        description: "Opens the specified text file (.txt, .md, etc.) and presents it in the viewer.",
+    },
+    {
+        name: "view",
+        section: 1,
+        synopsis: "view <FILE>",
+        shortDescription: "Alias for open command",
+        description: "Alias for open command. Displays file contents in the viewer.",
+    },
 ]);
 
 /**

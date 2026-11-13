@@ -75,6 +75,9 @@ export function dispatchKeyEvent(
         case "End":
             controller.setCursorIndex(controller.getInput().length);
             return true;
+        case "Escape":
+            controller.closeModal();
+            return true;
         default:
             if (key.length === 1) {
                 controller.insertText(key);

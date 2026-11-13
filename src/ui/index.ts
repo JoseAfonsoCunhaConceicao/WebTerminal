@@ -16,6 +16,7 @@ export {
 export type {
     TerminalLineKind,
     TerminalLine,
+    TerminalModalState,
     TerminalViewState,
     TerminalControllerOptions,
     CompletionResult,

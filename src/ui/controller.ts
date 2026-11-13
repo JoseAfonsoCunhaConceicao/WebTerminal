@@ -3,13 +3,15 @@
  */
 
 import type { WebTerminal } from "../terminal.js";
-import { formatPath } from "../vfs/path.js";
+import { formatPath, resolvePath } from "../vfs/path.js";
+import { findNode } from "../vfs/lookup.js";
 import { CLEAR_SCREEN_SEQUENCE } from "../command/builtins/clear.js";
 import { DEFAULT_USER } from "../command/builtins/whoami.js";
 import type {
     TerminalControllerOptions,
     TerminalLine,
     TerminalLineKind,
+    TerminalModalState,
     TerminalViewState,
     Unsubscribe,
 } from "./types.js";
@@ -32,6 +34,7 @@ export class TerminalController {
     private historyIndex: number;
     private draftInput: string;
     private nextLineId: number;
+    private activeModal: TerminalModalState | null = null;
 
     constructor(options: TerminalControllerOptions) {
         if (typeof options !== "object" || options === null) {
@@ -63,7 +66,31 @@ export class TerminalController {
             input: this.input,
             cursorIndex: this.cursorIndex,
             prompt: this.getPrompt(),
+            activeModal: this.activeModal,
         };
+    }
+
+    public openModal(title: string, content: string): void {
+        if (typeof title !== "string" || typeof content !== "string") {
+            throw new TypeError("Modal title and content must be strings.");
+        }
+        this.activeModal = { title, content };
+        this.notify();
+    }
+
+    public closeModal(): void {
+        if (this.activeModal !== null) {
+            this.activeModal = null;
+            this.notify();
+        }
+    }
+
+    public openFile(filePath: string): void {
+        if (typeof filePath !== "string") {
+            throw new TypeError("File path must be a string.");
+        }
+        this.input = `open ${filePath}`;
+        this.submit();
     }
 
     public getInput(): string {
@@ -163,8 +190,24 @@ export class TerminalController {
             if (result.error && result.error.length > 0) {
                 this.appendLine("error", result.error);
             }
+            if (result.exitCode === 0) {
+                this.checkOpenCommand(commandToRun);
+            }
         }
         this.notify();
+    }
+
+    private checkOpenCommand(commandLine: string): void {
+        const trimmed = commandLine.trim();
+        if (!trimmed.startsWith("open ") && !trimmed.startsWith("view ")) {
+            return;
+        }
+        const target = trimmed.replace(/^(open|view)\s+/, "").trim();
+        const resolved = resolvePath(this.terminal.getSession().getCurrentPath(), target);
+        const lookup = findNode(this.terminal.getRoot(), resolved);
+        if (lookup.success && lookup.node.kind === "file") {
+            this.activeModal = { title: lookup.node.name, content: lookup.node.content };
+        }
     }
 
     public abort(): void {

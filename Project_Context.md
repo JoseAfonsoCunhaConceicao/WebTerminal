@@ -991,23 +991,22 @@ Session:
     Implemented
 
 Command system:
-    All 13 planned built-ins implemented (pwd, echo, cd, ls, cat, clear, reset, history, help, whoami, man, apropos, tree)
+    All 14 built-ins implemented (pwd, echo, cd, ls, cat, clear, reset, history, help, whoami, man, apropos, tree, open / view)
+    Enhanced with options: tree (-L, -a, -d, -f, --dirsfirst), ls (-l, -a, -r, -F, -d, -1, grouped flags)
 
 Automated tests:
-    236 passing
+    257 passing
     0 failing
-    66 suites
+    68 suites
 
 Public API:
-    Complete (WebTerminal class facade, TerminalController headless UI, and src/index.ts exports)
+    Complete (WebTerminal class facade, TerminalController headless UI, mountTerminal DOM adapter, and src/index.ts exports)
 
 Presentation layer:
-    Headless Universal Controller implemented (TerminalController, tab completion, keymap, buffer editing)
+    Headless Universal Controller and Universal DOM Adapter implemented (TerminalController, tab completion, keymap, buffer editing, mountTerminal, interactive text file viewer modal)
 
 Next major area:
-    Visual rendering adapters (Vanilla HTML/CSS custom element, React wrapper hook)
+    NPM packaging, GitHub Actions CI/CD pipeline, and framework-specific wrapper helpers (React hook)
 ```
 
-The project currently has a functional foundation for resolving and locating nodes inside a deterministic, read-only virtual filesystem.
-
-The next work should build on this foundation rather than extending the VFS prematurely.
+The project currently has a production-ready core and universal presentation layer with deterministic virtual filesystem, 14 built-in Unix commands, and interactive file viewing.

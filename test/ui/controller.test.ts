@@ -202,6 +202,32 @@ describe("TerminalController", () => {
             controller.insertText("y");
             assert.equal(notifications, 2);
         });
+
+        it("manages active modal state and closes on Escape", () => {
+            const terminal = new WebTerminal({ root: createVFS() });
+            const controller = new TerminalController({ terminal });
+
+            assert.equal(controller.getState().activeModal, null);
+            controller.openModal("notes.txt", "sample content");
+            assert.deepEqual(controller.getState().activeModal, {
+                title: "notes.txt",
+                content: "sample content",
+            });
+
+            controller.handleKey("Escape");
+            assert.equal(controller.getState().activeModal, null);
+        });
+
+        it("automatically triggers modal when open command executes", () => {
+            const terminal = new WebTerminal({ root: createVFS() });
+            const controller = new TerminalController({ terminal });
+
+            controller.openFile("notes.txt");
+            assert.deepEqual(controller.getState().activeModal, {
+                title: "notes.txt",
+                content: "sample content",
+            });
+        });
     });
 });
 

@@ -9,16 +9,24 @@ import type { ExecutionContext } from "../context.js";
 import type { Directory, Node } from "../../vfs/node.js";
 import { resolvePath } from "../../vfs/path.js";
 import { findNode } from "../../vfs/lookup.js";
+import { hasFlag, extractValuedOption } from "../options.js";
 
-/**
- * Maximum node visits to prevent infinite loop execution.
- */
 const MAX_TREE_VISITS = 10000;
 
 interface TreeStackEntry {
     readonly node: Node;
     readonly prefix: string;
     readonly isLast: boolean;
+    readonly depth: number;
+    readonly fullPath: string;
+}
+
+interface TreeTraversalConfig {
+    readonly showAll: boolean;
+    readonly dirsOnly: boolean;
+    readonly fullPath: boolean;
+    readonly maxLevel: number;
+    readonly dirsFirst: boolean;
 }
 
 interface TreeTraversalResult {
@@ -27,68 +35,66 @@ interface TreeTraversalResult {
     readonly fileCount: number;
 }
 
-/**
- * Filters and alphabetically sorts node children according to options.
- */
 function filterAndSortChildren(
     children: readonly Node[],
-    showAll: boolean,
-    dirsOnly: boolean
+    config: TreeTraversalConfig
 ): Node[] {
     const filtered: Node[] = [];
     const count = children.length;
 
     for (let idx = 0; idx < count; idx++) {
         const child = children[idx]!;
-        if (!showAll && child.name.startsWith(".")) {
+        if (!config.showAll && child.name.startsWith(".")) {
             continue;
         }
-        if (dirsOnly && child.kind !== "directory") {
+        if (config.dirsOnly && child.kind !== "directory") {
             continue;
         }
         filtered.push(child);
     }
 
-    filtered.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    filtered.sort((a, b) => {
+        if (config.dirsFirst && a.kind !== b.kind) {
+            return a.kind === "directory" ? -1 : 1;
+        }
+        return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+    });
+
     return filtered;
 }
 
-/**
- * Pushes children onto the traversal stack in reverse order.
- */
 function pushChildren(
     stack: TreeStackEntry[],
     children: readonly Node[],
-    parentPrefix: string
+    parentPrefix: string,
+    depth: number,
+    basePath: string
 ): void {
     const count = children.length;
     for (let idx = count - 1; idx >= 0; idx--) {
         const child = children[idx]!;
         const isLast = idx === count - 1;
+        const fullPath = basePath === "." ? `./${child.name}` : `${basePath}/${child.name}`;
         stack.push({
             node: child,
             prefix: parentPrefix,
             isLast,
+            depth,
+            fullPath,
         });
     }
 }
 
-/**
- * Formats directory and file counts summary.
- */
 function formatSummary(dirCount: number, fileCount: number): string {
     const dirText = dirCount === 1 ? "1 directory" : `${dirCount} directories`;
     const fileText = fileCount === 1 ? "1 file" : `${fileCount} files`;
     return `${dirText}, ${fileText}`;
 }
 
-/**
- * Iteratively traverses a directory hierarchy without recursion.
- */
 function traverseTreeIteratively(
     rootDir: Directory,
-    showAll: boolean,
-    dirsOnly: boolean
+    target: string,
+    config: TreeTraversalConfig
 ): TreeTraversalResult {
     const lines: string[] = [];
     let dirCount = 0;
@@ -96,8 +102,8 @@ function traverseTreeIteratively(
 
     const stack: TreeStackEntry[] = [];
     const visited = new Set<Node>();
-    const initialChildren = filterAndSortChildren(rootDir.children, showAll, dirsOnly);
-    pushChildren(stack, initialChildren, "");
+    const initialChildren = filterAndSortChildren(rootDir.children, config);
+    pushChildren(stack, initialChildren, "", 1, target);
 
     for (let visits = 0; stack.length > 0 && visits < MAX_TREE_VISITS; visits++) {
         const entry = stack.pop()!;
@@ -107,13 +113,16 @@ function traverseTreeIteratively(
         visited.add(entry.node);
 
         const branch = entry.isLast ? "└── " : "├── ";
-        lines.push(`${entry.prefix}${branch}${entry.node.name}`);
+        const displayName = config.fullPath ? entry.fullPath : entry.node.name;
+        lines.push(`${entry.prefix}${branch}${displayName}`);
 
         if (entry.node.kind === "directory") {
             dirCount += 1;
-            const childPrefix = entry.prefix + (entry.isLast ? "    " : "│   ");
-            const children = filterAndSortChildren(entry.node.children, showAll, dirsOnly);
-            pushChildren(stack, children, childPrefix);
+            if (entry.depth < config.maxLevel) {
+                const childPrefix = entry.prefix + (entry.isLast ? "    " : "│   ");
+                const children = filterAndSortChildren(entry.node.children, config);
+                pushChildren(stack, children, childPrefix, entry.depth + 1, entry.fullPath);
+            }
         } else {
             fileCount += 1;
         }
@@ -122,14 +131,6 @@ function traverseTreeIteratively(
     return { lines, directoryCount: dirCount, fileCount };
 }
 
-/**
- * Generates an ASCII tree view of the virtual filesystem hierarchy.
- *
- * @param invocation - The command invocation.
- * @param context - The execution context.
- *
- * @returns A CommandResult with the formatted directory tree.
- */
 export function treeCommand(
     invocation: CommandInvocation,
     context: ExecutionContext
@@ -141,21 +142,36 @@ export function treeCommand(
         throw new TypeError("Context must be a valid ExecutionContext object.");
     }
 
-    const target = invocation.arguments[0] ?? ".";
+    const levelOpt = extractValuedOption(invocation.options, invocation.arguments, "L", "--level");
+    let maxLevel = Infinity;
+
+    if (levelOpt.value !== undefined) {
+        const parsed = Number.parseInt(levelOpt.value, 10);
+        if (Number.isNaN(parsed) || parsed < 1 || String(parsed) !== levelOpt.value.trim()) {
+            return errorResult("tree: Invalid level, must be greater than 0.", 1);
+        }
+        maxLevel = parsed;
+    }
+
+    const target = levelOpt.remainingArgs[0] ?? ".";
     const resolvedPath = resolvePath(context.session.getCurrentPath(), target);
-    const showAll = invocation.options.includes("-a") || invocation.options.includes("--all");
-    const dirsOnly = invocation.options.includes("-d");
+    const config: TreeTraversalConfig = {
+        showAll: hasFlag(invocation.options, "a", "--all"),
+        dirsOnly: hasFlag(invocation.options, "d"),
+        fullPath: hasFlag(invocation.options, "f"),
+        dirsFirst: invocation.options.includes("--dirsfirst"),
+        maxLevel,
+    };
 
     const result = findNode(context.root, resolvedPath);
     if (!result.success) {
         return errorResult(`tree: '${target}': No such file or directory`, 1);
     }
-
     if (result.node.kind === "file") {
         return successResult(`${target}\n\n0 directories, 1 file`);
     }
 
-    const traversal = traverseTreeIteratively(result.node, showAll, dirsOnly);
+    const traversal = traverseTreeIteratively(result.node, target, config);
     const header = target;
     const body = traversal.lines.length > 0 ? `\n${traversal.lines.join("\n")}` : "";
     const summary = formatSummary(traversal.directoryCount, traversal.fileCount);

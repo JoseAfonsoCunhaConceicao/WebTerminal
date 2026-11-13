@@ -212,4 +212,57 @@ describe("tree command", () => {
         assert.equal(result.exitCode, 0);
         assert.match(result.output, /readme\.md/);
     });
+
+    it("limits tree depth when -L level option is passed", () => {
+        const context: ExecutionContext = {
+            root: createTestVFS(),
+            session: new Session(),
+        };
+
+        const result = treeCommand(
+            { command: "tree", options: ["-L"], arguments: ["1"] },
+            context
+        );
+
+        assert.equal(result.exitCode, 0);
+        assert.doesNotMatch(result.output, /readme\.md/);
+        assert.doesNotMatch(result.output, /index\.ts/);
+        assert.match(result.output, /├── docs/);
+        assert.match(result.output, /├── projects/);
+    });
+
+    it("supports attached -L syntax and validates invalid level", () => {
+        const context: ExecutionContext = {
+            root: createTestVFS(),
+            session: new Session(),
+        };
+
+        const attached = treeCommand(
+            { command: "tree", options: ["-L1"], arguments: [] },
+            context
+        );
+        assert.equal(attached.exitCode, 0);
+
+        const invalid = treeCommand(
+            { command: "tree", options: ["-L0"], arguments: [] },
+            context
+        );
+        assert.equal(invalid.exitCode, 1);
+        assert.equal(invalid.error, "tree: Invalid level, must be greater than 0.");
+    });
+
+    it("prints full relative path prefix when -f option is passed", () => {
+        const context: ExecutionContext = {
+            root: createTestVFS(),
+            session: new Session(),
+        };
+
+        const result = treeCommand(
+            { command: "tree", options: ["-f"], arguments: ["docs"] },
+            context
+        );
+
+        assert.equal(result.exitCode, 0);
+        assert.match(result.output, /docs\/readme\.md/);
+    });
 });

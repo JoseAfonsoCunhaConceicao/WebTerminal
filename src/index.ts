@@ -45,6 +45,7 @@ export {
 export type {
     TerminalLineKind,
     TerminalLine,
+    TerminalModalState,
     TerminalViewState,
     TerminalControllerOptions,
     CompletionResult,
@@ -67,6 +68,7 @@ export {
 export { tokenize } from "./command/tokenizer.js";
 export { parseCommand } from "./command/parser.js";
 export { registerBuiltinCommands } from "./command/builtins/index.js";
+export { openCommand } from "./command/builtins/open.js";
 export {
     getManualPage,
     searchManualPages,

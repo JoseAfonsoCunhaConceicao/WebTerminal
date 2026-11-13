@@ -42,9 +42,9 @@ const sampleVFS = {
 function runDemonstration(terminal) {
     const demoCommands = [
         "pwd",
-        "ls -a",
-        "cat about.txt",
-        "tree",
+        "ls -la",
+        "tree -L 1",
+        "open about.txt",
         "whoami",
         "help",
     ];
