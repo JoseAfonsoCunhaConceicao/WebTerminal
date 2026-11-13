@@ -832,6 +832,13 @@ The following milestones are complete:
 - Guard against oversized command lines (`MAX_COMMAND_LINE_LENGTH = 4096`)
 - Command parser, tokenizer, built-ins, manual, tree, and executor tests
 
+### Public API Facade
+
+- `WebTerminal` class encapsulating VFS, session state, registry, and execution pipeline
+- Options interface `WebTerminalOptions` supporting custom root, initial path, and custom registry
+- Complete export surface in `src/index.ts` isolating internal mechanisms while exposing necessary types and functions
+- Integration test suite for the public facade and export surface
+
 ### Performance & Safety Optimizations
 
 - **VFS Immutability Enforcement**: Iterative `freezeVFS` deep-freezes VFS structures using a bounded DFS stack (`MAX_FREEZE_NODES = 50000`, 0 recursion).
@@ -842,9 +849,9 @@ The following milestones are complete:
 ### Validation
 
 - Automated test suite
-- 194 passing tests
+- 209 passing tests
 - 0 failures
-- 54 test suites
+- 58 test suites
 
 ---
 
@@ -976,18 +983,18 @@ Command system:
     All 13 planned built-ins implemented (pwd, echo, cd, ls, cat, clear, reset, history, help, whoami, man, apropos, tree)
 
 Automated tests:
-    194 passing
+    209 passing
     0 failing
-    54 suites
+    58 suites
 
 Public API:
-    Not finalized
+    Complete (WebTerminal class facade and src/index.ts exports)
 
 Presentation layer:
     Not implemented
 
 Next major area:
-    Public API facade (WebTerminal class in src/index.ts) and presentation integration
+    Presentation layer integration (React / Web UI terminal component)
 ```
 
 The project currently has a functional foundation for resolving and locating nodes inside a deterministic, read-only virtual filesystem.
