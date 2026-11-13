@@ -97,6 +97,19 @@ describe("WebTerminal facade", () => {
             assert.strictEqual(res.exitCode, 0);
             assert.strictEqual(res.output, "custom-output");
         });
+
+        it("configures session with custom maxHistoryEntries", () => {
+            const terminal = new WebTerminal({
+                root: createSampleVFS(),
+                maxHistoryEntries: 2,
+            });
+
+            terminal.execute("echo a");
+            terminal.execute("echo b");
+            terminal.execute("echo c");
+
+            assert.deepStrictEqual(terminal.getSession().getHistory(), ["echo b", "echo c"]);
+        });
     });
 
     describe("command execution", () => {

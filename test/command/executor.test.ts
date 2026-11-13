@@ -65,6 +65,38 @@ describe("command executor", () => {
             assert.equal(result.exitCode, 127);
             assert.equal(result.error, "unknown: command not found");
         });
+
+        it("catches runtime errors thrown by command handlers gracefully", () => {
+            const registry = createCommandRegistry();
+            registry.register("crash", () => {
+                throw new Error("unexpected explosion");
+            });
+            const context: ExecutionContext = {
+                root: createTestVFS(),
+                session: new Session(),
+            };
+
+            const result = executeInvocation(
+                { command: "crash", options: [], arguments: [] },
+                context,
+                registry
+            );
+
+            assert.equal(result.exitCode, 1);
+            assert.match(result.error ?? "", /crash: runtime error: unexpected explosion/);
+        });
+
+        it("throws TypeError if arguments are invalid", () => {
+            const registry = createCommandRegistry();
+            const context: ExecutionContext = {
+                root: createTestVFS(),
+                session: new Session(),
+            };
+
+            assert.throws(() => executeInvocation(null as never, context, registry), TypeError);
+            assert.throws(() => executeInvocation({ command: "cmd", options: [], arguments: [] }, null as never, registry), TypeError);
+            assert.throws(() => executeInvocation({ command: "cmd", options: [], arguments: [] }, context, null as never), TypeError);
+        });
     });
 
     describe("executeLine", () => {

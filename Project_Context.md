@@ -842,16 +842,18 @@ The following milestones are complete:
 ### Performance & Safety Optimizations
 
 - **VFS Immutability Enforcement**: Iterative `freezeVFS` deep-freezes VFS structures using a bounded DFS stack (`MAX_FREEZE_NODES = 50000`, 0 recursion) with visited-set cycle/DAG protection.
+- **Fault Isolation & Graceful Failure**: `executeInvocation` wraps command handler execution in a fault-isolation boundary, preventing unexpected runtime errors in handlers from crashing the terminal or host app.
 - **Errors as Values**: `findNode` eliminates `try/catch` de-optimizations and exception allocation in built-in command handlers.
-- **Path Processing Efficiency**: `parsePath` uses index slicing over character accumulation; `resolvePath` short-circuits absolute paths and `.`/`""`, eliminating 66% of intermediate heap allocations; `joinPath` enforces bidirectional defensive argument validation.
-- **Resource Limits & Memory Bounds**: Verifiable upper bounds on all loops, DoS protection on command input length (`MAX_COMMAND_LINE_LENGTH = 4096`), bounded session history capacity (`DEFAULT_MAX_HISTORY_ENTRIES = 1000`), and single-pass directory listing in `ls`.
+- **Path Processing Efficiency**: `parsePath` uses index slicing over character accumulation; `resolvePath` short-circuits absolute paths and `.`/`""`, eliminating 66% of intermediate heap allocations; `joinPath` and `resolvePath` enforce bidirectional defensive argument validation.
+- **Constant-Time Documentation Access**: Pre-indexed `MANUAL_MAP` provides $O(1)$ manual lookups for `help`, `man`, and `apropos`.
+- **Resource Limits & Memory Bounds**: Verifiable upper bounds on all loops, DoS protection on command input length (`MAX_COMMAND_LINE_LENGTH = 4096`), bounded session history capacity (`DEFAULT_MAX_HISTORY_ENTRIES = 1000`), single-pass directory listing in `ls`, and visited-set DAG protection in `tree`.
 
 ### Validation
 
 - Automated test suite
-- 213 passing tests
+- 219 passing tests
 - 0 failures
-- 58 test suites
+- 59 test suites
 
 ---
 
@@ -983,9 +985,9 @@ Command system:
     All 13 planned built-ins implemented (pwd, echo, cd, ls, cat, clear, reset, history, help, whoami, man, apropos, tree)
 
 Automated tests:
-    213 passing
+    219 passing
     0 failing
-    58 suites
+    59 suites
 
 Public API:
     Complete (WebTerminal class facade and src/index.ts exports)

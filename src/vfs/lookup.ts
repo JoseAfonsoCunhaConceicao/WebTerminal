@@ -24,6 +24,9 @@ export function findNode(root: Directory, path: Path): LookupResult {
     if (typeof path !== "object" || path === null || !Array.isArray(path.components)) {
         throw new TypeError("Path must be a valid Path object.");
     }
+    if (!path.isAbsolute) {
+        throw new TypeError("Path must be an absolute path.");
+    }
 
     let current: Node = root;
     const components = path.components;

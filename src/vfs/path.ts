@@ -122,6 +122,12 @@ export function joinPath(basePath: Path, path: Path): Path {
  * @returns An absolute, normalized Path.
  */
 export function resolvePath(currentPath: Path, input: string): Path {
+    if (typeof currentPath !== "object" || currentPath === null || !Array.isArray(currentPath.components)) {
+        throw new TypeError("CurrentPath must be a valid Path object.");
+    }
+    if (!currentPath.isAbsolute) {
+        throw new TypeError("CurrentPath must be an absolute path.");
+    }
     if (typeof input !== "string") {
         throw new TypeError("Input must be a string.");
     }

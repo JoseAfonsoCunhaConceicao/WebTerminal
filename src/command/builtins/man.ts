@@ -39,6 +39,10 @@ export function manCommand(
     invocation: CommandInvocation,
     _context: ExecutionContext
 ): CommandResult {
+    if (typeof invocation !== "object" || invocation === null || !Array.isArray(invocation.arguments)) {
+        throw new TypeError("Invocation must be a valid CommandInvocation object.");
+    }
+
     const target = invocation.arguments[0];
     if (!target) {
         return errorResult("What manual page do you want?", 1);

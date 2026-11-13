@@ -20,6 +20,10 @@ export function pwdCommand(
     _invocation: CommandInvocation,
     context: ExecutionContext
 ): CommandResult {
+    if (typeof context !== "object" || context === null) {
+        throw new TypeError("Context must be a valid ExecutionContext object.");
+    }
+
     const currentPath = context.session.getCurrentPath();
     const formatted = formatPath(currentPath);
 

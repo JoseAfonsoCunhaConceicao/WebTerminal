@@ -430,6 +430,27 @@ describe("path composition", () => {
 });
 
 describe("resolvePath", () => {
+    describe("argument validation", () => {
+        it("throws TypeError when currentPath is invalid or not absolute", () => {
+            assert.throws(() => resolvePath(null as never, "doc"), {
+                name: "TypeError",
+                message: /CurrentPath must be a valid Path object/,
+            });
+            assert.throws(() => resolvePath({ components: ["home"], isAbsolute: false }, "doc"), {
+                name: "TypeError",
+                message: /CurrentPath must be an absolute path/,
+            });
+        });
+
+        it("throws TypeError when input is not a string", () => {
+            const current: Path = { components: [], isAbsolute: true };
+            assert.throws(() => resolvePath(current, 123 as never), {
+                name: "TypeError",
+                message: /Input must be a string/,
+            });
+        });
+    });
+
     describe("relative paths", () => {
         it("resolves a relative path against the current path", () => {
             const currentPath: Path = {

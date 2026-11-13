@@ -21,6 +21,13 @@ export function cdCommand(
     invocation: CommandInvocation,
     context: ExecutionContext
 ): CommandResult {
+    if (typeof invocation !== "object" || invocation === null || !Array.isArray(invocation.arguments)) {
+        throw new TypeError("Invocation must be a valid CommandInvocation object.");
+    }
+    if (typeof context !== "object" || context === null) {
+        throw new TypeError("Context must be a valid ExecutionContext object.");
+    }
+
     if (invocation.arguments.length > 1) {
         return errorResult("cd: too many arguments", 1);
     }

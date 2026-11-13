@@ -165,4 +165,16 @@ describe("lookup", () => {
         assert.strictEqual(firstResult, secondResult);
         assert.strictEqual(firstResult, indexFile);
     });
+
+    it("throws TypeError if path is not absolute", () => {
+        const relativePath: Path = {
+            components: ["home"],
+            isAbsolute: false,
+        };
+
+        assert.throws(() => lookup(root, relativePath), {
+            name: "TypeError",
+            message: /Path must be an absolute path/,
+        });
+    });
 });

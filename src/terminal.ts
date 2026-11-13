@@ -21,6 +21,7 @@ export interface WebTerminalOptions {
     readonly root: Directory;
     readonly initialPath?: string | undefined;
     readonly registry?: CommandRegistry | undefined;
+    readonly maxHistoryEntries?: number | undefined;
 }
 
 /**
@@ -52,7 +53,9 @@ export class WebTerminal {
             registerBuiltinCommands(this.registry);
         }
 
-        const initialSession = new Session();
+        const initialSession = typeof options.maxHistoryEntries === "number"
+            ? new Session(options.maxHistoryEntries)
+            : new Session();
         if (typeof options.initialPath === "string") {
             const resolved = resolvePath(initialSession.getCurrentPath(), options.initialPath);
             const lookupRes = findNode(this.root, resolved);

@@ -37,6 +37,10 @@ export function aproposCommand(
     invocation: CommandInvocation,
     _context: ExecutionContext
 ): CommandResult {
+    if (typeof invocation !== "object" || invocation === null || !Array.isArray(invocation.arguments)) {
+        throw new TypeError("Invocation must be a valid CommandInvocation object.");
+    }
+
     const keyword = invocation.arguments[0];
     if (!keyword) {
         return errorResult("apropos: missing search keyword", 1);

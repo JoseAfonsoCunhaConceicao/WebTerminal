@@ -49,6 +49,13 @@ export function lsCommand(
     invocation: CommandInvocation,
     context: ExecutionContext
 ): CommandResult {
+    if (typeof invocation !== "object" || invocation === null) {
+        throw new TypeError("Invocation must be a valid CommandInvocation object.");
+    }
+    if (typeof context !== "object" || context === null) {
+        throw new TypeError("Context must be a valid ExecutionContext object.");
+    }
+
     const target = invocation.arguments[0] ?? ".";
     const resolvedPath = resolvePath(context.session.getCurrentPath(), target);
     const showAll = invocation.options.includes("-a") || invocation.options.includes("--all");

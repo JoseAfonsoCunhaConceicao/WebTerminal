@@ -35,6 +35,9 @@ export function executeInvocation(
     if (typeof context !== "object" || context === null) {
         throw new TypeError("Context must be a valid ExecutionContext object.");
     }
+    if (typeof registry !== "object" || registry === null) {
+        throw new TypeError("Registry must be a valid CommandRegistry object.");
+    }
 
     const handler = registry.get(invocation.command);
     if (!handler) {
@@ -45,7 +48,12 @@ export function executeInvocation(
         ? context
         : { root: context.root, session: context.session, registry };
 
-    return handler(invocation, effectiveContext);
+    try {
+        return handler(invocation, effectiveContext);
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        return errorResult(`${invocation.command}: runtime error: ${message}`, 1);
+    }
 }
 
 /**
@@ -67,6 +75,9 @@ export function executeLine(
     }
     if (typeof context !== "object" || context === null) {
         throw new TypeError("Context must be a valid ExecutionContext object.");
+    }
+    if (typeof registry !== "object" || registry === null) {
+        throw new TypeError("Registry must be a valid CommandRegistry object.");
     }
 
     if (commandLine.length > MAX_COMMAND_LINE_LENGTH) {

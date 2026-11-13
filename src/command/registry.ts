@@ -45,10 +45,16 @@ export function createCommandRegistry(): CommandRegistry {
         },
 
         get(name: string): CommandHandler | undefined {
+            if (typeof name !== "string") {
+                return undefined;
+            }
             return commands.get(name);
         },
 
         has(name: string): boolean {
+            if (typeof name !== "string") {
+                return false;
+            }
             return commands.has(name);
         },
 

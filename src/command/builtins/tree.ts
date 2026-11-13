@@ -49,7 +49,7 @@ function filterAndSortChildren(
         filtered.push(child);
     }
 
-    filtered.sort((a, b) => a.name.localeCompare(b.name));
+    filtered.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
     return filtered;
 }
 
@@ -95,11 +95,17 @@ function traverseTreeIteratively(
     let fileCount = 0;
 
     const stack: TreeStackEntry[] = [];
+    const visited = new Set<Node>();
     const initialChildren = filterAndSortChildren(rootDir.children, showAll, dirsOnly);
     pushChildren(stack, initialChildren, "");
 
     for (let visits = 0; stack.length > 0 && visits < MAX_TREE_VISITS; visits++) {
         const entry = stack.pop()!;
+        if (visited.has(entry.node)) {
+            continue;
+        }
+        visited.add(entry.node);
+
         const branch = entry.isLast ? "└── " : "├── ";
         lines.push(`${entry.prefix}${branch}${entry.node.name}`);
 
@@ -128,6 +134,13 @@ export function treeCommand(
     invocation: CommandInvocation,
     context: ExecutionContext
 ): CommandResult {
+    if (typeof invocation !== "object" || invocation === null) {
+        throw new TypeError("Invocation must be a valid object.");
+    }
+    if (typeof context !== "object" || context === null) {
+        throw new TypeError("Context must be a valid ExecutionContext object.");
+    }
+
     const target = invocation.arguments[0] ?? ".";
     const resolvedPath = resolvePath(context.session.getCurrentPath(), target);
     const showAll = invocation.options.includes("-a") || invocation.options.includes("--all");

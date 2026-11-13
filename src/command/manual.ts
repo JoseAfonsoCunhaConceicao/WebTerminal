@@ -108,6 +108,13 @@ const MANUAL_DATABASE: readonly ManualPage[] = Object.freeze([
 ]);
 
 /**
+ * Pre-indexed map for O(1) manual page lookup by command name.
+ */
+const MANUAL_MAP: ReadonlyMap<string, ManualPage> = new Map(
+    MANUAL_DATABASE.map((entry) => [entry.name, entry])
+);
+
+/**
  * Retrieves a manual page by command name.
  *
  * @param name - The command name to look up.
@@ -120,16 +127,7 @@ export function getManualPage(name: string): ManualPage | undefined {
     }
 
     const normalized = name.toLowerCase().trim();
-    const count = MANUAL_DATABASE.length;
-
-    for (let idx = 0; idx < count; idx++) {
-        const entry = MANUAL_DATABASE[idx]!;
-        if (entry.name === normalized) {
-            return entry;
-        }
-    }
-
-    return undefined;
+    return MANUAL_MAP.get(normalized);
 }
 
 /**
