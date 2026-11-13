@@ -1,9 +1,16 @@
 /**
- * Session file
+ * Session state management.
  */
 
 import type { Path } from "../vfs/path.js";
-import { parsePath } from "../vfs/path.js";
+
+/**
+ * Static root path instance used for initial state and resets.
+ */
+const ROOT_PATH: Path = Object.freeze({
+    components: Object.freeze([]),
+    isAbsolute: true,
+});
 
 /**
  * Represents the persistent execution state of a terminal session.
@@ -14,7 +21,7 @@ import { parsePath } from "../vfs/path.js";
  */
 export class Session {
     private currentPath: Path;
-    private history: string[];
+    private readonly history: string[];
 
     /**
      * Creates a new terminal session.
@@ -23,7 +30,7 @@ export class Session {
      * the command history is initialized as empty.
      */
     constructor() {
-        this.currentPath = parsePath("/");
+        this.currentPath = ROOT_PATH;
         this.history = [];
     }
 
@@ -44,6 +51,10 @@ export class Session {
      * @param newPath - The new current working directory.
      */
     setCurrentPath(newPath: Path): void {
+        if (typeof newPath !== "object" || newPath === null) {
+            throw new TypeError("New path must be a valid Path object.");
+        }
+
         this.currentPath = newPath;
     }
 
@@ -56,7 +67,7 @@ export class Session {
      * @returns The commands in chronological order.
      */
     getHistory(): readonly string[] {
-        return this.history;
+        return [...this.history];
     }
 
     /**
@@ -65,6 +76,10 @@ export class Session {
      * @param command - The command to add to the history.
      */
     addHistory(command: string): void {
+        if (typeof command !== "string") {
+            throw new TypeError("Command must be a string.");
+        }
+
         this.history.push(command);
     }
 
@@ -75,7 +90,7 @@ export class Session {
      * and the command history is cleared.
      */
     reset(): void {
-        this.currentPath = parsePath("/");
+        this.currentPath = ROOT_PATH;
         this.history.length = 0;
     }
 }

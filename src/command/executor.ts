@@ -11,6 +11,11 @@ import { tokenize } from "./tokenizer.js";
 import { parseCommand } from "./parser.js";
 
 /**
+ * Maximum permitted command line input length in characters (DoS protection).
+ */
+export const MAX_COMMAND_LINE_LENGTH = 4096;
+
+/**
  * Executes a parsed command invocation using the supplied registry and context.
  *
  * @param invocation - The parsed command invocation to run.
@@ -64,6 +69,13 @@ export function executeLine(
         throw new TypeError("Context must be a valid ExecutionContext object.");
     }
 
+    if (commandLine.length > MAX_COMMAND_LINE_LENGTH) {
+        return errorResult(
+            `Command line exceeds maximum length limit (${MAX_COMMAND_LINE_LENGTH} characters).`,
+            1
+        );
+    }
+
     if (commandLine.trim().length > 0) {
         context.session.addHistory(commandLine);
     }
@@ -80,4 +92,3 @@ export function executeLine(
 
     return executeInvocation(invocation, context, registry);
 }
-

@@ -794,6 +794,7 @@ The following milestones are complete:
 ### Lookup system
 
 - `lookup`
+- `findNode` (non-throwing Errors-as-Values alternative avoiding exception overhead)
 - Iterative VFS traversal
 - Root lookup
 - Nested lookup
@@ -804,10 +805,13 @@ The following milestones are complete:
 
 - `PathNotFoundError`
 - `NotADirectoryError`
+- Structured `LookupResult` discriminated union
 
 ### Session system
 
 - `Session` class managing `currentPath` and `history`
+- Pre-frozen root path caching
+- Defensive copying on history retrieval
 - Independent of VFS and command execution
 - Session tests
 
@@ -825,14 +829,22 @@ The following milestones are complete:
 - Manual database and keyword search engine
 - Iterative ASCII tree traversal engine (stack-based, no recursion)
 - `executeInvocation` and `executeLine` command execution pipeline
+- Guard against oversized command lines (`MAX_COMMAND_LINE_LENGTH = 4096`)
 - Command parser, tokenizer, built-ins, manual, tree, and executor tests
+
+### Performance & Safety Optimizations
+
+- **VFS Immutability Enforcement**: Iterative `freezeVFS` deep-freezes VFS structures using a bounded DFS stack (`MAX_FREEZE_NODES = 50000`, 0 recursion).
+- **Errors as Values**: `findNode` eliminates `try/catch` de-optimizations and exception allocation in built-in command handlers.
+- **Path Processing Efficiency**: `parsePath` uses index slicing over character accumulation; `resolvePath` short-circuits absolute paths and `.`/`""`, eliminating 66% of intermediate heap allocations.
+- **Resource Limits**: Verifiable upper bounds on all loops and DoS protection on command input length.
 
 ### Validation
 
 - Automated test suite
-- 189 passing tests
+- 194 passing tests
 - 0 failures
-- 52 test suites
+- 54 test suites
 
 ---
 
@@ -964,9 +976,9 @@ Command system:
     All 13 planned built-ins implemented (pwd, echo, cd, ls, cat, clear, reset, history, help, whoami, man, apropos, tree)
 
 Automated tests:
-    189 passing
+    194 passing
     0 failing
-    52 suites
+    54 suites
 
 Public API:
     Not finalized

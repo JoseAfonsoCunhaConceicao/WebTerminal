@@ -7,8 +7,7 @@ import type { CommandResult } from "../result.js";
 import { errorResult, successResult } from "../result.js";
 import type { ExecutionContext } from "../context.js";
 import { resolvePath } from "../../vfs/path.js";
-import { lookup } from "../../vfs/lookup.js";
-import { NotADirectoryError, PathNotFoundError } from "../../vfs/errors.js";
+import { findNode } from "../../vfs/lookup.js";
 
 /**
  * Concatenates and prints file contents.
@@ -32,23 +31,18 @@ export function catCommand(
     for (let idx = 0; idx < fileCount; idx++) {
         const target = invocation.arguments[idx]!;
         const resolvedPath = resolvePath(context.session.getCurrentPath(), target);
+        const result = findNode(context.root, resolvedPath);
 
-        try {
-            const node = lookup(context.root, resolvedPath);
-            if (node.kind === "directory") {
-                return errorResult(`cat: ${target}: Is a directory`, 1);
-            }
-
-            outputs.push(node.content);
-        } catch (error) {
-            if (error instanceof PathNotFoundError || error instanceof NotADirectoryError) {
-                return errorResult(`cat: ${target}: No such file or directory`, 1);
-            }
-
-            throw error;
+        if (!result.success) {
+            return errorResult(`cat: ${target}: No such file or directory`, 1);
         }
+
+        if (result.node.kind === "directory") {
+            return errorResult(`cat: ${target}: Is a directory`, 1);
+        }
+
+        outputs.push(result.node.content);
     }
 
     return successResult(outputs.join("\n"));
 }
-

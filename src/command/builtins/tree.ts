@@ -8,8 +8,7 @@ import { errorResult, successResult } from "../result.js";
 import type { ExecutionContext } from "../context.js";
 import type { Directory, Node } from "../../vfs/node.js";
 import { resolvePath } from "../../vfs/path.js";
-import { lookup } from "../../vfs/lookup.js";
-import { NotADirectoryError, PathNotFoundError } from "../../vfs/errors.js";
+import { findNode } from "../../vfs/lookup.js";
 
 /**
  * Maximum node visits to prevent infinite loop execution.
@@ -134,24 +133,19 @@ export function treeCommand(
     const showAll = invocation.options.includes("-a") || invocation.options.includes("--all");
     const dirsOnly = invocation.options.includes("-d");
 
-    try {
-        const node = lookup(context.root, resolvedPath);
-        if (node.kind === "file") {
-            return successResult(`${target}\n\n0 directories, 1 file`);
-        }
-
-        const traversal = traverseTreeIteratively(node, showAll, dirsOnly);
-        const header = target;
-        const body = traversal.lines.length > 0 ? `\n${traversal.lines.join("\n")}` : "";
-        const summary = formatSummary(traversal.directoryCount, traversal.fileCount);
-
-        return successResult(`${header}${body}\n\n${summary}`);
-    } catch (error) {
-        if (error instanceof PathNotFoundError || error instanceof NotADirectoryError) {
-            return errorResult(`tree: '${target}': No such file or directory`, 1);
-        }
-
-        throw error;
+    const result = findNode(context.root, resolvedPath);
+    if (!result.success) {
+        return errorResult(`tree: '${target}': No such file or directory`, 1);
     }
-}
 
+    if (result.node.kind === "file") {
+        return successResult(`${target}\n\n0 directories, 1 file`);
+    }
+
+    const traversal = traverseTreeIteratively(result.node, showAll, dirsOnly);
+    const header = target;
+    const body = traversal.lines.length > 0 ? `\n${traversal.lines.join("\n")}` : "";
+    const summary = formatSummary(traversal.directoryCount, traversal.fileCount);
+
+    return successResult(`${header}${body}\n\n${summary}`);
+}

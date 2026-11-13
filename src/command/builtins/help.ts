@@ -6,32 +6,18 @@ import type { CommandInvocation } from "../invocation.js";
 import type { CommandResult } from "../result.js";
 import { errorResult, successResult } from "../result.js";
 import type { ExecutionContext } from "../context.js";
-
-/**
- * Built-in command descriptions.
- */
-const COMMAND_DESCRIPTIONS: Readonly<Record<string, string>> = Object.freeze({
-    cat: "Concatenate and print file contents",
-    cd: "Change the current working directory",
-    clear: "Clear the terminal screen",
-    echo: "Write arguments to standard output",
-    help: "Display information about available commands",
-    history: "Display the command history list",
-    ls: "List directory contents",
-    pwd: "Print name of current working directory",
-    reset: "Reset the terminal session state",
-});
+import { getManualPage } from "../manual.js";
 
 /**
  * Formats a single command help description.
  */
 function formatSingleHelp(name: string): CommandResult {
-    const desc = COMMAND_DESCRIPTIONS[name];
-    if (!desc) {
+    const page = getManualPage(name);
+    if (!page) {
         return errorResult(`help: no help topics match '${name}'`, 1);
     }
 
-    return successResult(`${name} - ${desc}`);
+    return successResult(`${page.name} - ${page.shortDescription}`);
 }
 
 /**
@@ -44,7 +30,8 @@ function formatAllHelp(names: readonly string[]): CommandResult {
 
     for (let idx = 0; idx < count; idx++) {
         const name = sorted[idx]!;
-        const desc = COMMAND_DESCRIPTIONS[name] ?? "User defined command";
+        const page = getManualPage(name);
+        const desc = page ? page.shortDescription : "User defined command";
         lines.push(`  ${name.padEnd(10, " ")} ${desc}`);
     }
 
@@ -73,8 +60,21 @@ export function helpCommand(
 
     const availableNames = context.registry
         ? context.registry.getRegisteredNames()
-        : Object.keys(COMMAND_DESCRIPTIONS);
+        : [
+              "apropos",
+              "cat",
+              "cd",
+              "clear",
+              "echo",
+              "help",
+              "history",
+              "ls",
+              "man",
+              "pwd",
+              "reset",
+              "tree",
+              "whoami",
+          ];
 
     return formatAllHelp(availableNames);
 }
-

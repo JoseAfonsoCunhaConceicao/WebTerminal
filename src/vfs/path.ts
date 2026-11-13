@@ -10,165 +10,127 @@ export interface Path {
 /**
  * Parses a filesystem path string into its structured Path representation.
  *
- * @param path - The path string to parse. The path may be absolute or
- *   relative and may contain repeated or trailing path separators.
+ * @param path - The path string to parse.
  *
- * @returns A Path containing the parsed components and an absolute flag
- *   indicating whether the input path starts at the filesystem root.
- *
- * @remarks
- * Path components are separated by `/`. Repeated separators and trailing
- * separators are ignored.
- *
- * Special components such as `.` and `..` are preserved and are not
- * normalized by this function. Path normalization is performed separately
- * by `normalizePath`.
- *
- * This function does not access the virtual filesystem and does not mutate
- * its input.
+ * @returns A Path containing the parsed components and an isAbsolute flag.
  */
 export function parsePath(path: string): Path {
-    const parsedComponents: string[] = [];
-    let accumulator = "";
-    const pathSize = path.length;
+    if (typeof path !== "string") {
+        throw new TypeError("Path must be a string.");
+    }
 
-    for (let i: number = 0; i < pathSize; i++) {
+    const parsedComponents: string[] = [];
+    const pathSize = path.length;
+    let start = -1;
+
+    for (let i = 0; i < pathSize; i++) {
         if (path[i] !== '/') {
-            accumulator += path[i];
-        } else {
-            if (accumulator !== "") {
-                parsedComponents.push(accumulator);
-                accumulator = "";
+            if (start === -1) {
+                start = i;
             }
+        } else if (start !== -1) {
+            parsedComponents.push(path.slice(start, i));
+            start = -1;
         }
     }
 
-    if (accumulator !== "" )
-        parsedComponents.push(accumulator);
+    if (start !== -1) {
+        parsedComponents.push(path.slice(start, pathSize));
+    }
 
-
-    const res: Path = {
+    return {
         components: parsedComponents,
         isAbsolute: path.startsWith('/'),
     };
-
-    return res;
 }
 
 /**
- * Normalizes a structured Path by resolving current-directory and
- * parent-directory components.
+ * Normalizes a structured Path by resolving current and parent components.
  *
- * @param path - The Path to normalize. Its absolute/relative nature is
- *   preserved in the resulting Path.
+ * @param path - The Path to normalize.
  *
- * @returns A new normalized Path with `.` components removed and
- *   resolvable `..` components processed according to the path type.
- *
- * @remarks
- * For absolute paths, `..` components that would move above the
- * filesystem root are discarded.
- *
- * For relative paths, unresolved leading `..` components are preserved
- * because their final location depends on the path's eventual base.
- *
- * The input Path is not mutated. The returned Path contains a new
- * components array.
- *
- * Normalization is idempotent: normalizing an already normalized Path
- * produces an equivalent Path.
+ * @returns A new normalized Path.
  */
 export function normalizePath(path: Path): Path {
+    if (typeof path !== "object" || path === null || !Array.isArray(path.components)) {
+        throw new TypeError("Path must be a valid Path object.");
+    }
+
     const normalizedComponents: string[] = [];
     const parsedComponentsSize = path.components.length;
 
-    for(let i = 0; i < parsedComponentsSize; i++) {
+    for (let i = 0; i < parsedComponentsSize; i++) {
         const currentComponent = path.components[i]!;
-        
-        if (currentComponent == ".")
+
+        if (currentComponent === ".") {
             continue;
-        else if (currentComponent == "..") {
-            if ((normalizedComponents.length != 0) && (normalizedComponents.at(-1) != ".."))
+        }
+
+        if (currentComponent === "..") {
+            const hasPrev = normalizedComponents.length !== 0;
+            const prevNotParent = normalizedComponents.at(-1) !== "..";
+
+            if (hasPrev && prevNotParent) {
                 normalizedComponents.pop();
-            else {
-                if (!path.isAbsolute)
-                    normalizedComponents.push(currentComponent);
-                else 
-                    continue;
+            } else if (!path.isAbsolute) {
+                normalizedComponents.push(currentComponent);
             }
-        } else
-            normalizedComponents.push(currentComponent);
+            continue;
+        }
+
+        normalizedComponents.push(currentComponent);
     }
 
-    const newPath: Path = {
+    return {
         components: normalizedComponents,
         isAbsolute: path.isAbsolute,
     };
-
-    return newPath;
 }
 
 /**
  * Combines a base Path with another Path.
  *
- * @param basePath - The base path to which a relative path is appended.
- *   The base path is expected to represent an absolute path.
- * @param path - The path to combine with the base path. If this path is
- *   absolute, it is returned independently of the base path.
+ * @param basePath - The base path (expected absolute).
+ * @param path - The path to combine with the base path.
  *
- * @returns The combined Path. Relative paths are appended to the base
- *   path and the result is marked as absolute. Absolute paths are returned
- *   without being combined with the base path.
- *
- * @remarks
- * This function performs path composition only. It does not normalize
- * the resulting components, so `.` and `..` components are preserved.
- *
- * Neither the base path nor the input path is mutated.
+ * @returns The combined Path.
  */
 export function joinPath(basePath: Path, path: Path): Path {
-    if (path.isAbsolute)
+    if (path.isAbsolute) {
         return path;
-    else {
-        const newPath = basePath.components.concat(path.components);
-        const jointedPath: Path = {
-            components: newPath,
-            isAbsolute: true,
-        }
-
-        return jointedPath;
     }
+
+    return {
+        components: basePath.components.concat(path.components),
+        isAbsolute: true,
+    };
 }
 
 /**
  * Resolves a path against the current working path.
  *
- * @param currentPath - The current working path. It must be an absolute,
- *   normalized Path.
- * @param input - The path supplied for resolution. It may be relative or
- *   absolute and may contain `.`, `..`, repeated separators, or trailing
- *   separators.
+ * @param currentPath - The current working path (must be absolute).
+ * @param input - The path supplied for resolution.
  *
- * @returns An absolute, normalized Path representing the resolved location.
- *
- * @remarks
- * Relative input paths are resolved against `currentPath`. Absolute input
- * paths are resolved independently of `currentPath`.
- *
- * The resulting Path contains no `.` or `..` components, and `..`
- * components cannot cause the result to escape the filesystem root.
- *
- * This function performs path resolution only. It does not access the
- * virtual filesystem and does not require the target path to exist.
- *
- * The `currentPath` argument is not mutated.
+ * @returns An absolute, normalized Path.
  */
-export function resolvePath( currentPath: Path, input: string): Path {
-    const inputPath: Path = parsePath(input);
-    const jointedPath: Path = joinPath(currentPath, inputPath);
-    const normalizedPath: Path = normalizePath(jointedPath);
+export function resolvePath(currentPath: Path, input: string): Path {
+    if (typeof input !== "string") {
+        throw new TypeError("Input must be a string.");
+    }
 
-    return normalizedPath;
+    if (input === "" || input === ".") {
+        return {
+            components: [...currentPath.components],
+            isAbsolute: true,
+        };
+    }
+
+    if (input.startsWith("/")) {
+        return normalizePath(parsePath(input));
+    }
+
+    return normalizePath(joinPath(currentPath, parsePath(input)));
 }
 
 /**
@@ -177,17 +139,10 @@ export function resolvePath( currentPath: Path, input: string): Path {
  * @param path - The Path object to format.
  *
  * @returns The string representation of the path.
- *
- * @remarks
- * An absolute path with no components formats as `/`.
- * A relative path with no components formats as an empty string.
  */
 export function formatPath(path: Path): string {
-    if (typeof path !== "object" || path === null) {
-        throw new TypeError("Path must be a non-null object.");
-    }
-    if (!Array.isArray(path.components)) {
-        throw new TypeError("Path components must be an array.");
+    if (typeof path !== "object" || path === null || !Array.isArray(path.components)) {
+        throw new TypeError("Path must be a valid Path object.");
     }
 
     if (path.components.length === 0) {
