@@ -821,16 +821,17 @@ The following milestones are complete:
 - `CommandResult` explicit execution outcome (`exitCode`, `output`, `error`)
 - `ExecutionContext` environmental interface (`root`, `session`)
 - `CommandRegistry` and `createCommandRegistry`
-- Built-in commands: `pwd`, `echo`, `cd`, `ls`, `cat`, `clear`, `reset`, `history`, `help`
+- Built-in commands: `pwd`, `echo`, `cd`, `ls`, `cat`, `clear`, `reset`, `history`, `help`, `whoami`, `man`, `apropos`
+- Manual database and keyword search engine
 - `executeInvocation` and `executeLine` command execution pipeline
-- Command parser, tokenizer, built-ins, and executor tests
+- Command parser, tokenizer, built-ins, manual, and executor tests
 
 ### Validation
 
 - Automated test suite
-- 168 passing tests
+- 181 passing tests
 - 0 failures
-- 45 test suites
+- 51 test suites
 
 ---
 
@@ -959,12 +960,12 @@ Session:
     Implemented
 
 Command system:
-    Tokenizer, parser, executor, and core built-ins (pwd, echo, cd, ls, cat, clear, reset, history, help) implemented
+    Tokenizer, parser, executor, manual database, and 12 built-ins (pwd, echo, cd, ls, cat, clear, reset, history, help, whoami, man, apropos) implemented
 
 Automated tests:
-    168 passing
+    181 passing
     0 failing
-    45 suites
+    51 suites
 
 Public API:
     Not finalized
@@ -973,7 +974,7 @@ Presentation layer:
     Not implemented
 
 Next major area:
-    Tree command, public API facade (WebTerminal class), and presentation integration
+    Tree command (iterative VFS traversal), public API facade (WebTerminal class), and presentation integration
 ```
 
 The project currently has a functional foundation for resolving and locating nodes inside a deterministic, read-only virtual filesystem.

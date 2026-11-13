@@ -12,6 +12,9 @@ import { clearCommand } from "./clear.js";
 import { resetCommand } from "./reset.js";
 import { historyCommand } from "./history.js";
 import { helpCommand } from "./help.js";
+import { whoamiCommand } from "./whoami.js";
+import { manCommand } from "./man.js";
+import { aproposCommand } from "./apropos.js";
 
 /**
  * Registers all core built-in commands into the provided registry.
@@ -32,4 +35,7 @@ export function registerBuiltinCommands(registry: CommandRegistry): void {
     registry.register("reset", resetCommand);
     registry.register("history", historyCommand);
     registry.register("help", helpCommand);
+    registry.register("whoami", whoamiCommand);
+    registry.register("man", manCommand);
+    registry.register("apropos", aproposCommand);
 }
