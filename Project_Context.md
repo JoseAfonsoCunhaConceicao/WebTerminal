@@ -821,17 +821,18 @@ The following milestones are complete:
 - `CommandResult` explicit execution outcome (`exitCode`, `output`, `error`)
 - `ExecutionContext` environmental interface (`root`, `session`)
 - `CommandRegistry` and `createCommandRegistry`
-- Built-in commands: `pwd`, `echo`, `cd`, `ls`, `cat`, `clear`, `reset`, `history`, `help`, `whoami`, `man`, `apropos`
+- Built-in commands: `pwd`, `echo`, `cd`, `ls`, `cat`, `clear`, `reset`, `history`, `help`, `whoami`, `man`, `apropos`, `tree`
 - Manual database and keyword search engine
+- Iterative ASCII tree traversal engine (stack-based, no recursion)
 - `executeInvocation` and `executeLine` command execution pipeline
-- Command parser, tokenizer, built-ins, manual, and executor tests
+- Command parser, tokenizer, built-ins, manual, tree, and executor tests
 
 ### Validation
 
 - Automated test suite
-- 181 passing tests
+- 189 passing tests
 - 0 failures
-- 51 test suites
+- 52 test suites
 
 ---
 
@@ -960,12 +961,12 @@ Session:
     Implemented
 
 Command system:
-    Tokenizer, parser, executor, manual database, and 12 built-ins (pwd, echo, cd, ls, cat, clear, reset, history, help, whoami, man, apropos) implemented
+    All 13 planned built-ins implemented (pwd, echo, cd, ls, cat, clear, reset, history, help, whoami, man, apropos, tree)
 
 Automated tests:
-    181 passing
+    189 passing
     0 failing
-    51 suites
+    52 suites
 
 Public API:
     Not finalized
@@ -974,7 +975,7 @@ Presentation layer:
     Not implemented
 
 Next major area:
-    Tree command (iterative VFS traversal), public API facade (WebTerminal class), and presentation integration
+    Public API facade (WebTerminal class in src/index.ts) and presentation integration
 ```
 
 The project currently has a functional foundation for resolving and locating nodes inside a deterministic, read-only virtual filesystem.

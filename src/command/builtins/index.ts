@@ -15,6 +15,7 @@ import { helpCommand } from "./help.js";
 import { whoamiCommand } from "./whoami.js";
 import { manCommand } from "./man.js";
 import { aproposCommand } from "./apropos.js";
+import { treeCommand } from "./tree.js";
 
 /**
  * Registers all core built-in commands into the provided registry.
@@ -38,4 +39,5 @@ export function registerBuiltinCommands(registry: CommandRegistry): void {
     registry.register("whoami", whoamiCommand);
     registry.register("man", manCommand);
     registry.register("apropos", aproposCommand);
+    registry.register("tree", treeCommand);
 }
