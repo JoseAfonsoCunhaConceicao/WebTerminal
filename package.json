@@ -3,6 +3,28 @@
   "version": "0.1.0",
   "description": "Interactive virtual terminal UI library for web applications.",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "license": "MIT",
+  "keywords": [
+    "terminal",
+    "web-terminal",
+    "vfs",
+    "virtual-filesystem",
+    "cli",
+    "interactive"
+  ],
   "devDependencies": {
     "@types/node": "^22.20.3",
     "typescript": "^7.0.2"

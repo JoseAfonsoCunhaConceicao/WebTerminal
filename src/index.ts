@@ -26,10 +26,15 @@ export {
 // Session
 export { Session, DEFAULT_MAX_HISTORY_ENTRIES } from "./session/session.js";
 
+// UI & Built-in Constants
+export { CLEAR_SCREEN_SEQUENCE } from "./command/builtins/clear.js";
+export { DEFAULT_USER } from "./command/builtins/whoami.js";
+
 // Command & Execution Pipeline
 export type { CommandResult } from "./command/result.js";
 export { successResult, errorResult } from "./command/result.js";
 export type { CommandInvocation } from "./command/invocation.js";
+export type { TokenizerError, TokenizerErrorCode } from "./command/errors.js";
 export type { ExecutionContext } from "./command/context.js";
 export type { CommandHandler, CommandRegistry } from "./command/registry.js";
 export { createCommandRegistry } from "./command/registry.js";
