@@ -30,6 +30,24 @@ export { Session, DEFAULT_MAX_HISTORY_ENTRIES } from "./session/session.js";
 export { CLEAR_SCREEN_SEQUENCE } from "./command/builtins/clear.js";
 export { DEFAULT_USER } from "./command/builtins/whoami.js";
 
+// Universal Presentation Layer
+export { TerminalController } from "./ui/controller.js";
+export { computeCompletion } from "./ui/completion.js";
+export { dispatchKeyEvent } from "./ui/keymap.js";
+export {
+    insertAt,
+    deleteBackwardAt,
+    deleteForwardAt,
+} from "./ui/buffer.js";
+export type {
+    TerminalLineKind,
+    TerminalLine,
+    TerminalViewState,
+    TerminalControllerOptions,
+    CompletionResult,
+    Unsubscribe,
+} from "./ui/types.js";
+
 // Command & Execution Pipeline
 export type { CommandResult } from "./command/result.js";
 export { successResult, errorResult } from "./command/result.js";

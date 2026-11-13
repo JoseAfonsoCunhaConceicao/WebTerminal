@@ -839,6 +839,15 @@ The following milestones are complete:
 - Complete export surface in `src/index.ts` isolating internal mechanisms while exposing necessary types and functions
 - Integration test suite for the public facade and export surface
 
+### Universal Presentation Layer
+
+- `TerminalController` headless UI state controller managing prompt, input buffer, cursor position, and rendered lines ring buffer
+- Intelligent `computeCompletion` tab-completion engine (command names + VFS relative paths)
+- Keyboard dispatcher `dispatchKeyEvent` handling Enter, Backspace, Delete, Arrows, Tab, Home, End, Ctrl+C, Ctrl+L
+- Functional buffer editor `insertAt`, `deleteBackwardAt`, `deleteForwardAt`
+- Framework-agnostic observer pattern with `subscribe` and immutable `TerminalViewState` snapshots
+- Integration and unit test suite in `test/ui/`
+
 ### Performance & Safety Optimizations
 
 - **VFS Immutability Enforcement**: Iterative `freezeVFS` deep-freezes VFS structures using a bounded DFS stack (`MAX_FREEZE_NODES = 50000`, 0 recursion) with visited-set cycle/DAG protection.
@@ -851,9 +860,9 @@ The following milestones are complete:
 ### Validation
 
 - Automated test suite
-- 219 passing tests
+- 236 passing tests
 - 0 failures
-- 59 test suites
+- 66 test suites
 
 ---
 
@@ -985,18 +994,18 @@ Command system:
     All 13 planned built-ins implemented (pwd, echo, cd, ls, cat, clear, reset, history, help, whoami, man, apropos, tree)
 
 Automated tests:
-    219 passing
+    236 passing
     0 failing
-    59 suites
+    66 suites
 
 Public API:
-    Complete (WebTerminal class facade and src/index.ts exports)
+    Complete (WebTerminal class facade, TerminalController headless UI, and src/index.ts exports)
 
 Presentation layer:
-    Not implemented
+    Headless Universal Controller implemented (TerminalController, tab completion, keymap, buffer editing)
 
 Next major area:
-    Presentation layer integration (React / Web UI terminal component)
+    Visual rendering adapters (Vanilla HTML/CSS custom element, React wrapper hook)
 ```
 
 The project currently has a functional foundation for resolving and locating nodes inside a deterministic, read-only virtual filesystem.
