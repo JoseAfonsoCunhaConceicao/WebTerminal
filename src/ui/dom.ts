@@ -3,8 +3,9 @@
  */
 
 import type { TerminalController } from "./controller.js";
-import type { TerminalLine, TerminalModalState, TerminalViewState, Unsubscribe } from "./types.js";
+import type { TerminalLine, TerminalPagerState, TerminalViewState, Unsubscribe } from "./types.js";
 import { injectTerminalStyles } from "./styles.js";
+import { renderMarkdown } from "./markdown.js";
 
 /**
  * Options for mounting the terminal into a DOM element.
@@ -15,13 +16,15 @@ export interface MountTerminalOptions {
     readonly onStateChange?: ((state: TerminalViewState) => void) | undefined;
 }
 
+const CLICKABLE_FILE_PATTERN = /\.(txt|rtf|md|markdown|png|jpg|jpeg|gif|svg|webp|pdf|zip|tar|gz|mp3|wav|mp4|webm|js|ts|json|py|sh|css|html|sql|url)$/i;
+
 function renderLineText(
     doc: Document,
     text: string,
     onFileClick?: (filename: string) => void
 ): HTMLElement {
     const span = doc.createElement("span");
-    if (!onFileClick || (!text.includes(".txt") && !text.includes(".md"))) {
+    if (!onFileClick || !text.includes(".")) {
         span.textContent = text;
         return span;
     }
@@ -31,7 +34,8 @@ function renderLineText(
     for (let idx = 0; idx < count; idx++) {
         const token = tokens[idx]!;
         const clean = token.replace(/^[├──└──│\s]+/, "").trim();
-        if ((clean.endsWith(".txt") || clean.endsWith(".md")) && !clean.includes("/")) {
+        const isClickable = CLICKABLE_FILE_PATTERN.test(clean) && !clean.includes("/");
+        if (isClickable) {
             const link = doc.createElement("span");
             link.className = "wt-file-link";
             link.textContent = token;
@@ -89,58 +93,36 @@ function updateActiveInput(
     activeRow.appendChild(doc.createTextNode(afterText));
 }
 
-function createModalWindow(
+function renderPagerView(
     doc: Document,
-    modal: TerminalModalState,
-    onClose: () => void
-): HTMLElement {
-    const win = doc.createElement("div");
-    win.className = "wt-modal-window";
+    pagerBox: HTMLElement,
+    pager: TerminalPagerState
+): void {
+    pagerBox.innerHTML = "";
 
     const header = doc.createElement("div");
-    header.className = "wt-modal-header";
-
-    const title = doc.createElement("span");
-    title.textContent = modal.title;
-    header.appendChild(title);
-
-    const closeBtn = doc.createElement("button");
-    closeBtn.className = "wt-modal-close";
-    closeBtn.textContent = "✕";
-    closeBtn.onclick = () => onClose();
-    header.appendChild(closeBtn);
+    header.className = "wt-pager-header";
+    const titleSpan = doc.createElement("span");
+    const label = pager.contentType === "text" ? "view" : `view (${pager.contentType})`;
+    titleSpan.textContent = `[ ${label}: ${pager.title} ]`;
+    const exitSpan = doc.createElement("span");
+    exitSpan.textContent = "Press [q] or [Esc] to exit";
+    header.appendChild(titleSpan);
+    header.appendChild(exitSpan);
 
     const body = doc.createElement("div");
-    body.className = "wt-modal-body";
-    body.textContent = modal.content;
-
-    win.appendChild(header);
-    win.appendChild(body);
-    return win;
-}
-
-function renderModalElement(
-    doc: Document,
-    container: HTMLElement,
-    modal: TerminalModalState | null | undefined,
-    onClose: () => void
-): void {
-    const existing = container.querySelector(".wt-modal-backdrop");
-    if (existing) {
-        existing.remove();
-    }
-    if (!modal) {
-        return;
+    body.className = "wt-pager-body";
+    if (pager.contentType === "markdown") {
+        body.innerHTML = renderMarkdown(pager.content);
+    } else {
+        const pre = doc.createElement("pre");
+        pre.className = "wt-pager-text";
+        pre.textContent = pager.content;
+        body.appendChild(pre);
     }
 
-    const backdrop = doc.createElement("div");
-    backdrop.className = "wt-modal-backdrop";
-    backdrop.onclick = (event) => {
-        if (event.target === backdrop) onClose();
-    };
-
-    backdrop.appendChild(createModalWindow(doc, modal, onClose));
-    container.appendChild(backdrop);
+    pagerBox.appendChild(header);
+    pagerBox.appendChild(body);
 }
 
 export function mountTerminal(
@@ -166,22 +148,38 @@ export function mountTerminal(
     const linesBox = doc.createElement("div");
     const activeRow = doc.createElement("div");
     activeRow.className = "wt-active-row";
+    const pagerBox = doc.createElement("div");
+    pagerBox.className = "wt-pager";
+    pagerBox.style.display = "none";
 
     container.appendChild(linesBox);
     container.appendChild(activeRow);
+    container.appendChild(pagerBox);
 
     const onFileClick = (filename: string): void => {
         controller.openFile(filename);
     };
 
     const unsubscribe = controller.subscribe((state) => {
+        if (state.viewMode === "pager" && state.pager) {
+            linesBox.style.display = "none";
+            activeRow.style.display = "none";
+            pagerBox.style.display = "flex";
+            renderPagerView(doc, pagerBox, state.pager);
+            options?.onStateChange?.(state);
+            return;
+        }
+
+        pagerBox.style.display = "none";
+        linesBox.style.display = "";
+        activeRow.style.display = "flex";
+
         linesBox.innerHTML = "";
         const lineCount = state.lines.length;
         for (let idx = 0; idx < lineCount; idx++) {
             linesBox.appendChild(createLineElement(doc, state.lines[idx]!, onFileClick));
         }
         updateActiveInput(doc, activeRow, state);
-        renderModalElement(doc, container, state.activeModal, () => controller.closeModal());
         container.scrollTop = container.scrollHeight;
         options?.onStateChange?.(state);
     });

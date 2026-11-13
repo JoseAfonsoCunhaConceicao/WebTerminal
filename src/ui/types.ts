@@ -20,11 +20,22 @@ export interface TerminalLine {
 }
 
 /**
- * State of an active modal popup window (e.g. text file viewer).
+ * Display mode of the terminal interface.
  */
-export interface TerminalModalState {
+export type TerminalViewMode = "normal" | "pager";
+
+/**
+ * Kind of content presented inside the in-terminal pager.
+ */
+export type PagerContentType = "text" | "code" | "markdown";
+
+/**
+ * State of the in-terminal pager (nano / less style viewer).
+ */
+export interface TerminalPagerState {
     readonly title: string;
     readonly content: string;
+    readonly contentType: PagerContentType;
 }
 
 /**
@@ -35,7 +46,8 @@ export interface TerminalViewState {
     readonly input: string;
     readonly cursorIndex: number;
     readonly prompt: string;
-    readonly activeModal?: TerminalModalState | null | undefined;
+    readonly viewMode: TerminalViewMode;
+    readonly pager?: TerminalPagerState | null | undefined;
 }
 
 /**

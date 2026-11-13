@@ -8,6 +8,7 @@ export { dispatchKeyEvent } from "./keymap.js";
 export { mountTerminal } from "./dom.js";
 export type { MountTerminalOptions } from "./dom.js";
 export { injectTerminalStyles, TERMINAL_CSS } from "./styles.js";
+export { renderMarkdown } from "./markdown.js";
 export {
     insertAt,
     deleteBackwardAt,
@@ -16,7 +17,8 @@ export {
 export type {
     TerminalLineKind,
     TerminalLine,
-    TerminalModalState,
+    TerminalViewMode,
+    TerminalPagerState,
     TerminalViewState,
     TerminalControllerOptions,
     CompletionResult,

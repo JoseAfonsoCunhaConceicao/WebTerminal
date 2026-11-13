@@ -174,6 +174,36 @@
                     name: "contact.txt",
                     kind: "file",
                     content: "Get in touch:\n- GitHub: https://github.com/joseconceicao\n- Project: WebTerminal"
+                },
+                {
+                    name: "cv.pdf",
+                    kind: "file",
+                    content: "https://example.com/cv.pdf"
+                },
+                {
+                    name: "avatar.png",
+                    kind: "file",
+                    content: "https://images.unsplash.com/photo-1534972195531-a756b1126f24?w=800"
+                },
+                {
+                    name: "sample.mp3",
+                    kind: "file",
+                    content: "https://actions.google.com/sounds/v1/ambiences/rain_heavy.ogg"
+                },
+                {
+                    name: "clip.mp4",
+                    kind: "file",
+                    content: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+                },
+                {
+                    name: "engine.ts",
+                    kind: "file",
+                    content: "export class CoreEngine {\n    constructor(private readonly name: string) {}\n    public run(): void {\n        console.log(`Running ${this.name}...`);\n    }\n}"
+                },
+                {
+                    name: "source.zip",
+                    kind: "file",
+                    content: "WebTerminal source bundle"
                 }
             ]
         };
@@ -187,7 +217,7 @@
             terminal,
             user: "visitor",
             host: "webterminal",
-            welcomeBanner: "=======================================================\n WebTerminal v0.1.0 — NASA Power of 10 Architecture\n Type 'help' for available commands, 'tree' for files.\n Press [Tab] to auto-complete commands and paths.\n======================================================="
+            welcomeBanner: "=======================================================\n WebTerminal v0.1.0 — NASA Power of 10 Architecture\n Type 'help' for commands, 'tree' for files.\n Try 'open README.md' (markdown), 'open engine.ts' (code),\n or 'open avatar.png' (image), 'open sample.mp3' (audio).\n Press [q] or [Esc] to exit pager mode.\n======================================================="
         });
 
         const mountElement = document.getElementById("terminal-container");

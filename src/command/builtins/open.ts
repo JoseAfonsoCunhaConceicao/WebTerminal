@@ -1,5 +1,5 @@
 /**
- * Built-in open command for viewing file contents.
+ * Built-in open command for viewing files, documents, media, and external links.
  */
 
 import type { CommandInvocation } from "../invocation.js";
@@ -9,39 +9,79 @@ import type { ExecutionContext } from "../context.js";
 import { resolvePath } from "../../vfs/path.js";
 import { findNode } from "../../vfs/lookup.js";
 
-const BINARY_EXTENSIONS = new Set([
-    "png", "jpg", "jpeg", "gif", "webp", "ico",
-    "pdf", "zip", "tar", "gz", "exe", "bin", "dmg",
+export type OpenActionType =
+    | "text"
+    | "code"
+    | "markdown"
+    | "image"
+    | "audio"
+    | "video"
+    | "pdf"
+    | "zip"
+    | "link"
+    | "unsupported";
+
+export interface FileClassification {
+    readonly action: OpenActionType;
+    readonly url?: string | undefined;
+}
+
+const TEXT_EXTS = new Set(["", "txt", "rtf", "log", "env", "csv"]);
+const CODE_EXTS = new Set([
+    "js", "ts", "jsx", "tsx", "json", "html", "css", "scss",
+    "py", "rs", "go", "java", "c", "cpp", "h", "hpp", "cs",
+    "php", "rb", "sh", "bash", "zsh", "sql", "yaml", "yml", "toml", "xml",
 ]);
+const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "ico"]);
+const AUDIO_EXTS = new Set(["mp3", "wav", "ogg", "m4a", "flac", "aac"]);
+const VIDEO_EXTS = new Set(["mp4", "webm", "mov", "mkv", "avi"]);
+const ARCHIVE_EXTS = new Set(["zip", "tar", "gz", "7z", "rar"]);
 
-function getFileExtension(filename: string): string {
+export function classifyFile(filename: string, content: string): FileClassification {
+    const trimmed = content.trim();
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        return { action: "link", url: trimmed };
+    }
+
     const dotIndex = filename.lastIndexOf(".");
-    if (dotIndex <= 0 || dotIndex === filename.length - 1) {
-        return "";
-    }
-    return filename.slice(dotIndex + 1).toLowerCase();
+    const ext = (dotIndex > 0 ? filename.slice(dotIndex + 1) : "").toLowerCase();
+
+    if (ext === "md" || ext === "markdown") return { action: "markdown" };
+    if (ext === "pdf") return { action: "pdf", url: trimmed || filename };
+    if (ext === "url" || ext === "link") return { action: "link", url: trimmed };
+    if (ARCHIVE_EXTS.has(ext)) return { action: "zip", url: trimmed || filename };
+    if (IMAGE_EXTS.has(ext)) return { action: "image", url: trimmed || filename };
+    if (AUDIO_EXTS.has(ext)) return { action: "audio", url: trimmed || filename };
+    if (VIDEO_EXTS.has(ext)) return { action: "video", url: trimmed || filename };
+    if (CODE_EXTS.has(ext)) return { action: "code" };
+    if (TEXT_EXTS.has(ext)) return { action: "text" };
+
+    return { action: "unsupported" };
 }
 
-function isSupportedTextFile(filename: string): boolean {
-    const ext = getFileExtension(filename);
-    if (ext.length === 0) {
-        return true;
+function formatSuccessMessage(action: OpenActionType, name: string, url?: string): string {
+    switch (action) {
+        case "text":
+            return `[ Opening '${name}' in terminal pager... ]`;
+        case "code":
+            return `[ Opening code file '${name}' in terminal pager... ]`;
+        case "markdown":
+            return `[ Opening '${name}' (rendered markdown) in terminal pager... ]`;
+        case "image":
+            return `[ Opening image '${name}' in a new tab... ]`;
+        case "audio":
+            return `[ Opening audio '${name}' in a new tab... ]`;
+        case "video":
+            return `[ Opening video '${name}' in a new tab... ]`;
+        case "pdf":
+            return `[ Opening '${name}' in a new tab... ]`;
+        case "zip":
+            return `[ Downloading '${name}'... ]`;
+        case "link":
+            return `[ Opening link in a new tab: ${url} ]`;
+        default:
+            return `[ Opened '${name}' ]`;
     }
-    return !BINARY_EXTENSIONS.has(ext);
-}
-
-function formatFileView(name: string, content: string): string {
-    const lines = content.length === 0 ? [] : content.split("\n");
-    const count = lines.length;
-    const lineLabel = count === 1 ? "1 line" : `${count} lines`;
-    const header = `=== [ ${name} ] (${lineLabel}) ===`;
-    const separator = "=".repeat(header.length);
-
-    if (count === 0) {
-        return `${header}\n(empty file)\n${separator}`;
-    }
-
-    return `${header}\n${content}\n${separator}`;
 }
 
 export function openCommand(
@@ -60,25 +100,25 @@ export function openCommand(
     }
 
     const target = invocation.arguments[0]!;
+    if (target.startsWith("http://") || target.startsWith("https://")) {
+        return successResult(`[ Opening link in a new tab: ${target} ]`);
+    }
+
     const resolvedPath = resolvePath(context.session.getCurrentPath(), target);
     const lookupResult = findNode(context.root, resolvedPath);
 
     if (!lookupResult.success) {
         return errorResult(`open: '${target}': No such file or directory`, 1);
     }
-
     if (lookupResult.node.kind !== "file") {
         return errorResult(`open: '${target}': Is a directory`, 1);
     }
 
-    if (!isSupportedTextFile(lookupResult.node.name)) {
-        return errorResult(
-            `open: '${target}': Unsupported file format. Only text files (.txt, .md, etc.) can be opened.`,
-            1
-        );
+    const classification = classifyFile(lookupResult.node.name, lookupResult.node.content);
+    if (classification.action === "unsupported") {
+        return errorResult(`open: '${target}': Unsupported file format.`, 1);
     }
 
-    const view = formatFileView(lookupResult.node.name, lookupResult.node.content);
-    return successResult(view);
+    const message = formatSuccessMessage(classification.action, lookupResult.node.name, classification.url);
+    return successResult(message);
 }
-

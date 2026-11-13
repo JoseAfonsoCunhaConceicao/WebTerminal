@@ -203,30 +203,40 @@ describe("TerminalController", () => {
             assert.equal(notifications, 2);
         });
 
-        it("manages active modal state and closes on Escape", () => {
+        it("manages in-terminal pager state and exits on Escape or 'q'", () => {
             const terminal = new WebTerminal({ root: createVFS() });
             const controller = new TerminalController({ terminal });
 
-            assert.equal(controller.getState().activeModal, null);
-            controller.openModal("notes.txt", "sample content");
-            assert.deepEqual(controller.getState().activeModal, {
+            assert.equal(controller.getState().viewMode, "normal");
+            assert.equal(controller.getState().pager, null);
+
+            controller.enterPager("notes.txt", "sample content", "text");
+            assert.equal(controller.getState().viewMode, "pager");
+            assert.deepEqual(controller.getState().pager, {
                 title: "notes.txt",
                 content: "sample content",
+                contentType: "text",
             });
 
-            controller.handleKey("Escape");
-            assert.equal(controller.getState().activeModal, null);
+            controller.handleKey("q");
+            assert.equal(controller.getState().viewMode, "normal");
+            assert.equal(controller.getState().pager, null);
         });
 
-        it("automatically triggers modal when open command executes", () => {
+        it("automatically triggers pager when open command executes for text and markdown", () => {
             const terminal = new WebTerminal({ root: createVFS() });
             const controller = new TerminalController({ terminal });
 
             controller.openFile("notes.txt");
-            assert.deepEqual(controller.getState().activeModal, {
-                title: "notes.txt",
-                content: "sample content",
-            });
+            assert.equal(controller.getState().viewMode, "pager");
+            assert.equal(controller.getState().pager?.contentType, "text");
+
+            controller.handleKey("Escape");
+            assert.equal(controller.getState().viewMode, "normal");
+
+            controller.openFile("projects/readme.md");
+            assert.equal(controller.getState().viewMode, "pager");
+            assert.equal(controller.getState().pager?.contentType, "markdown");
         });
     });
 });

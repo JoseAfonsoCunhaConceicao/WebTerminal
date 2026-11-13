@@ -74,62 +74,54 @@ export const TERMINAL_CSS = `
 .wt-file-link:hover {
     color: var(--wt-link-hover-color, #79c0ff);
 }
-.wt-modal-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 24px;
-    box-sizing: border-box;
-}
-.wt-modal-window {
-    background: var(--wt-modal-bg, #161b22);
-    border: 1px solid var(--wt-modal-border, #30363d);
-    border-radius: 8px;
-    width: 100%;
-    max-width: 640px;
-    max-height: 80%;
+.wt-pager {
     display: flex;
     flex-direction: column;
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
+    height: 100%;
+    width: 100%;
     overflow: hidden;
-}
-.wt-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    background: var(--wt-modal-header-bg, #21262d);
-    border-bottom: 1px solid var(--wt-modal-border, #30363d);
-    font-size: 13px;
-    font-weight: 600;
-    color: #f0f6fc;
-}
-.wt-modal-close {
-    background: none;
-    border: none;
-    color: #8b949e;
-    font-size: 16px;
-    cursor: pointer;
-    padding: 0 4px;
-    line-height: 1;
-}
-.wt-modal-close:hover {
-    color: #f85149;
-}
-.wt-modal-body {
-    padding: 16px;
-    overflow-y: auto;
-    font-family: inherit;
-    font-size: 13px;
-    line-height: 1.6;
+    background-color: var(--wt-bg, #0d1117);
     color: var(--wt-fg, #c9d1d9);
+    box-sizing: border-box;
+}
+.wt-pager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    background-color: var(--wt-pager-header-bg, #161b22);
+    border-bottom: 1px solid var(--wt-pager-border, #30363d);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--wt-prompt-color, #2ea043);
+    user-select: none;
+}
+.wt-pager-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    font-family: inherit;
+    font-size: var(--wt-font-size, 14px);
+    line-height: var(--wt-line-height, 1.6);
+    box-sizing: border-box;
+}
+.wt-pager-text {
     white-space: pre-wrap;
     word-break: break-word;
+    margin: 0;
 }
+.wt-md-h1 { font-size: 1.4em; margin: 0 0 10px 0; color: #f0f6fc; border-bottom: 1px solid #30363d; padding-bottom: 4px; }
+.wt-md-h2 { font-size: 1.2em; margin: 10px 0 6px 0; color: #f0f6fc; }
+.wt-md-h3 { font-size: 1.05em; margin: 8px 0 4px 0; color: #f0f6fc; }
+.wt-md-p { margin: 0 0 8px 0; }
+.wt-md-quote { border-left: 3px solid #58a6ff; padding-left: 12px; margin: 8px 0; color: #8b949e; }
+.wt-md-code { background: rgba(110, 118, 129, 0.2); padding: 2px 4px; border-radius: 4px; font-family: inherit; font-size: 0.9em; }
+.wt-md-pre { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px; overflow-x: auto; margin: 8px 0; }
+.wt-md-pre code { background: none; padding: 0; }
+.wt-md-li { margin-left: 20px; margin-bottom: 4px; }
+.wt-md-hr { border: none; border-top: 1px solid #30363d; margin: 12px 0; }
+.wt-md-link { color: #58a6ff; text-decoration: underline; }
+.wt-md-empty { height: 8px; }
 `;
 
 /**

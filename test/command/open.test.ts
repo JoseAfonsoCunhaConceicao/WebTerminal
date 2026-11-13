@@ -20,12 +20,42 @@ function createTestVFS(): Directory {
                 content: "Author: José\nTitle: WebTerminal",
             },
             {
-                name: "empty.txt",
+                name: "script.ts",
                 kind: "file",
-                content: "",
+                content: "const a: number = 10;",
             },
             {
-                name: "image.png",
+                name: "photo.jpg",
+                kind: "file",
+                content: "imagedata",
+            },
+            {
+                name: "music.mp3",
+                kind: "file",
+                content: "audiodata",
+            },
+            {
+                name: "clip.mp4",
+                kind: "file",
+                content: "videodata",
+            },
+            {
+                name: "document.pdf",
+                kind: "file",
+                content: "pdfcontent",
+            },
+            {
+                name: "archive.zip",
+                kind: "file",
+                content: "zipdata",
+            },
+            {
+                name: "github.url",
+                kind: "file",
+                content: "https://github.com/joseconceicao",
+            },
+            {
+                name: "program.bin",
                 kind: "file",
                 content: "binarydata",
             },
@@ -36,7 +66,7 @@ function createTestVFS(): Directory {
                     {
                         name: "guide.md",
                         kind: "file",
-                        content: "# Guide",
+                        content: "# Guide\nDetailed guide.",
                     },
                 ],
             },
@@ -93,50 +123,98 @@ describe("open command", () => {
         assert.equal(result.error, "open: 'docs': Is a directory");
     });
 
-    it("returns error when target is an unsupported binary file", () => {
+    it("returns error when target is an unsupported file", () => {
         const context: ExecutionContext = {
             root: createTestVFS(),
             session: new Session(),
         };
 
         const result = openCommand(
-            { command: "open", options: [], arguments: ["image.png"] },
+            { command: "open", options: [], arguments: ["program.bin"] },
             context
         );
         assert.equal(result.exitCode, 1);
-        assert.match(result.error ?? "", /Unsupported file format/);
+        assert.equal(result.error, "open: 'program.bin': Unsupported file format.");
     });
 
-    it("opens and formats text file successfully", () => {
+    it("handles text, code, and markdown files for terminal pager", () => {
         const context: ExecutionContext = {
             root: createTestVFS(),
             session: new Session(),
         };
 
-        const result = openCommand(
+        const resTxt = openCommand(
             { command: "open", options: [], arguments: ["about.txt"] },
             context
         );
-        assert.equal(result.exitCode, 0);
-        assert.match(result.output, /=== \[ about\.txt \] \(2 lines\) ===/);
-        assert.match(result.output, /Author: José/);
+        assert.equal(resTxt.exitCode, 0);
+        assert.match(resTxt.output, /Opening 'about\.txt' in terminal pager/);
+
+        const resCode = openCommand(
+            { command: "open", options: [], arguments: ["script.ts"] },
+            context
+        );
+        assert.equal(resCode.exitCode, 0);
+        assert.match(resCode.output, /Opening code file 'script\.ts' in terminal pager/);
+
+        const resMd = openCommand(
+            { command: "open", options: [], arguments: ["docs/guide.md"] },
+            context
+        );
+        assert.equal(resMd.exitCode, 0);
+        assert.match(resMd.output, /rendered markdown/);
     });
 
-    it("opens empty file with empty file label", () => {
+    it("handles media, PDF, ZIP, and link files", () => {
         const context: ExecutionContext = {
             root: createTestVFS(),
             session: new Session(),
         };
 
-        const result = openCommand(
-            { command: "open", options: [], arguments: ["empty.txt"] },
+        const resImg = openCommand(
+            { command: "open", options: [], arguments: ["photo.jpg"] },
             context
         );
-        assert.equal(result.exitCode, 0);
-        assert.match(result.output, /\(empty file\)/);
+        assert.equal(resImg.exitCode, 0);
+        assert.match(resImg.output, /Opening image 'photo\.jpg' in a new tab/);
+
+        const resAud = openCommand(
+            { command: "open", options: [], arguments: ["music.mp3"] },
+            context
+        );
+        assert.equal(resAud.exitCode, 0);
+        assert.match(resAud.output, /Opening audio 'music\.mp3' in a new tab/);
+
+        const resVid = openCommand(
+            { command: "open", options: [], arguments: ["clip.mp4"] },
+            context
+        );
+        assert.equal(resVid.exitCode, 0);
+        assert.match(resVid.output, /Opening video 'clip\.mp4' in a new tab/);
+
+        const resPdf = openCommand(
+            { command: "open", options: [], arguments: ["document.pdf"] },
+            context
+        );
+        assert.equal(resPdf.exitCode, 0);
+        assert.match(resPdf.output, /Opening 'document\.pdf' in a new tab/);
+
+        const resZip = openCommand(
+            { command: "open", options: [], arguments: ["archive.zip"] },
+            context
+        );
+        assert.equal(resZip.exitCode, 0);
+        assert.match(resZip.output, /Downloading 'archive\.zip'/);
+
+        const resLink = openCommand(
+            { command: "open", options: [], arguments: ["github.url"] },
+            context
+        );
+        assert.equal(resLink.exitCode, 0);
+        assert.match(resLink.output, /Opening link in a new tab/);
     });
 
-    it("opens nested file and integrates with executeLine and view alias", () => {
+    it("opens direct URLs and integrates with executeLine and view alias", () => {
         const registry = createCommandRegistry();
         registerBuiltinCommands(registry);
 
@@ -145,13 +223,12 @@ describe("open command", () => {
             session: new Session(),
         };
 
-        const resOpen = executeLine("open docs/guide.md", context, registry);
-        assert.equal(resOpen.exitCode, 0);
-        assert.match(resOpen.output, /guide\.md/);
+        const resDirect = executeLine("open https://google.com", context, registry);
+        assert.equal(resDirect.exitCode, 0);
+        assert.match(resDirect.output, /Opening link in a new tab: https:\/\/google\.com/);
 
         const resView = executeLine("view docs/guide.md", context, registry);
         assert.equal(resView.exitCode, 0);
         assert.match(resView.output, /guide\.md/);
     });
 });
-

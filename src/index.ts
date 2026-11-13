@@ -37,6 +37,7 @@ export { dispatchKeyEvent } from "./ui/keymap.js";
 export { mountTerminal } from "./ui/dom.js";
 export type { MountTerminalOptions } from "./ui/dom.js";
 export { injectTerminalStyles, TERMINAL_CSS } from "./ui/styles.js";
+export { renderMarkdown } from "./ui/markdown.js";
 export {
     insertAt,
     deleteBackwardAt,
@@ -45,7 +46,8 @@ export {
 export type {
     TerminalLineKind,
     TerminalLine,
-    TerminalModalState,
+    TerminalViewMode,
+    TerminalPagerState,
     TerminalViewState,
     TerminalControllerOptions,
     CompletionResult,

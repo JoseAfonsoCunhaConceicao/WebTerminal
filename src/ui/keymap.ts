@@ -20,6 +20,21 @@ function handleCtrlKey(controller: TerminalController, key: string): boolean {
 }
 
 /**
+ * Dispatches keyboard events when the terminal is in pager mode.
+ */
+function handlePagerKey(controller: TerminalController, key: string, ctrlKey: boolean): boolean {
+    if (ctrlKey && (key === "x" || key === "X" || key === "c" || key === "C")) {
+        controller.exitPager();
+        return true;
+    }
+    if (key === "q" || key === "Q" || key === "Escape") {
+        controller.exitPager();
+        return true;
+    }
+    return false;
+}
+
+/**
  * Dispatches standard terminal keyboard events to controller operations.
  *
  * @param controller - The target TerminalController.
@@ -38,6 +53,10 @@ export function dispatchKeyEvent(
     }
     if (typeof key !== "string") {
         throw new TypeError("Key must be a string.");
+    }
+
+    if (controller.getViewMode() === "pager") {
+        return handlePagerKey(controller, key, ctrlKey);
     }
 
     if (ctrlKey) {
@@ -74,9 +93,6 @@ export function dispatchKeyEvent(
             return true;
         case "End":
             controller.setCursorIndex(controller.getInput().length);
-            return true;
-        case "Escape":
-            controller.closeModal();
             return true;
         default:
             if (key.length === 1) {
