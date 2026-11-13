@@ -34,9 +34,14 @@ export function freezeVFS(root: Directory): Directory {
     }
 
     const stack: Node[] = [root];
+    const visited = new Set<Node>();
 
     for (let count = 0; stack.length > 0 && count < MAX_FREEZE_NODES; count++) {
         const node = stack.pop()!;
+        if (visited.has(node)) {
+            continue;
+        }
+        visited.add(node);
         Object.freeze(node);
 
         if (node.kind === "directory") {

@@ -13,6 +13,11 @@ const ROOT_PATH: Path = Object.freeze({
 });
 
 /**
+ * Maximum number of command entries retained in session history.
+ */
+export const DEFAULT_MAX_HISTORY_ENTRIES = 1000;
+
+/**
  * Represents the persistent execution state of a terminal session.
  *
  * A session stores the current working directory and the commands entered
@@ -22,16 +27,21 @@ const ROOT_PATH: Path = Object.freeze({
 export class Session {
     private currentPath: Path;
     private readonly history: string[];
+    private readonly maxHistoryEntries: number;
 
     /**
      * Creates a new terminal session.
      *
-     * The current path is initialized to the virtual file system root and
-     * the command history is initialized as empty.
+     * @param maxHistoryEntries - Optional maximum history capacity (defaults to 1000).
      */
-    constructor() {
+    constructor(maxHistoryEntries: number = DEFAULT_MAX_HISTORY_ENTRIES) {
+        if (typeof maxHistoryEntries !== "number" || maxHistoryEntries <= 0 || !Number.isInteger(maxHistoryEntries)) {
+            throw new TypeError("maxHistoryEntries must be a positive integer.");
+        }
+
         this.currentPath = ROOT_PATH;
         this.history = [];
+        this.maxHistoryEntries = maxHistoryEntries;
     }
 
     /**
@@ -81,6 +91,9 @@ export class Session {
         }
 
         this.history.push(command);
+        if (this.history.length > this.maxHistoryEntries) {
+            this.history.shift();
+        }
     }
 
     /**

@@ -18,9 +18,15 @@ function formatDirectoryEntries(
     showAll: boolean,
     onePerLine: boolean
 ): string {
-    const names = children
-        .map((child) => child.name)
-        .filter((name) => showAll || !name.startsWith("."));
+    const names: string[] = [];
+    const count = children.length;
+
+    for (let idx = 0; idx < count; idx++) {
+        const name = children[idx]!.name;
+        if (showAll || !name.startsWith(".")) {
+            names.push(name);
+        }
+    }
 
     if (showAll) {
         names.push(".", "..");

@@ -178,3 +178,4 @@ describe("WebTerminal facade", () => {
         });
     });
 });
+

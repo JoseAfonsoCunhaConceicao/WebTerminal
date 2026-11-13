@@ -41,6 +41,26 @@ describe("freezeVFS", () => {
             freezeVFS(null as unknown as Directory);
         }, TypeError);
     });
+
+    it("handles shared node references gracefully without multiple visits", () => {
+        const sharedFile = { name: "shared.txt", kind: "file" as const, content: "data" };
+        const root: Directory = {
+            name: "",
+            kind: "directory",
+            children: [
+                sharedFile,
+                {
+                    name: "sub",
+                    kind: "directory",
+                    children: [sharedFile],
+                },
+            ],
+        };
+
+        const frozen = freezeVFS(root);
+        assert.equal(Object.isFrozen(frozen), true);
+        assert.equal(Object.isFrozen(sharedFile), true);
+    });
 });
 
 describe("findNode", () => {
@@ -83,3 +103,4 @@ describe("findNode", () => {
         }
     });
 });
+

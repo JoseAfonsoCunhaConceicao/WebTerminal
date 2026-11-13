@@ -17,6 +17,16 @@ describe("Session", () => {
 
             assert.deepStrictEqual(session.getHistory(), []);
         });
+
+        it("throws TypeError if maxHistoryEntries is not a positive integer", () => {
+            assert.throws(() => new Session(0), {
+                name: "TypeError",
+                message: /maxHistoryEntries must be a positive integer/,
+            });
+            assert.throws(() => new Session(-5), {
+                name: "TypeError",
+            });
+        });
     });
 
     describe("setCurrentPath", () => {
@@ -58,6 +68,16 @@ describe("Session", () => {
                 session.getHistory(),
                 ["pwd", "ls", "cd projects"],
             );
+        });
+
+        it("discards oldest history entries when exceeding capacity", () => {
+            const session = new Session(2);
+
+            session.addHistory("cmd1");
+            session.addHistory("cmd2");
+            session.addHistory("cmd3");
+
+            assert.deepStrictEqual(session.getHistory(), ["cmd2", "cmd3"]);
         });
     });
 

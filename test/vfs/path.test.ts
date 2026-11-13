@@ -335,6 +335,18 @@ describe("joinPath", () => {
     assert.notStrictEqual(result.components, base.components);
     assert.notStrictEqual(result.components, path.components);
   });
+
+  test("throws TypeError if basePath or path is invalid", () => {
+    const valid = parsePath("/home");
+    assert.throws(() => joinPath(null as unknown as Path, valid), {
+      name: "TypeError",
+      message: /BasePath must be a valid Path object/,
+    });
+    assert.throws(() => joinPath(valid, null as unknown as Path), {
+      name: "TypeError",
+      message: /Path must be a valid Path object/,
+    });
+  });
 });
 
 describe("path composition", () => {

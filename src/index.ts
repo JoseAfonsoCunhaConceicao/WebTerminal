@@ -24,7 +24,7 @@ export {
 } from "./vfs/path.js";
 
 // Session
-export { Session } from "./session/session.js";
+export { Session, DEFAULT_MAX_HISTORY_ENTRIES } from "./session/session.js";
 
 // Command & Execution Pipeline
 export type { CommandResult } from "./command/result.js";

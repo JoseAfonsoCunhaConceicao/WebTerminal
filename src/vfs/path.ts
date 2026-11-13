@@ -96,6 +96,13 @@ export function normalizePath(path: Path): Path {
  * @returns The combined Path.
  */
 export function joinPath(basePath: Path, path: Path): Path {
+    if (typeof basePath !== "object" || basePath === null || !Array.isArray(basePath.components)) {
+        throw new TypeError("BasePath must be a valid Path object.");
+    }
+    if (typeof path !== "object" || path === null || !Array.isArray(path.components)) {
+        throw new TypeError("Path must be a valid Path object.");
+    }
+
     if (path.isAbsolute) {
         return path;
     }
