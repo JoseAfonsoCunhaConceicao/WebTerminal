@@ -3,11 +3,18 @@
  */
 
 import type { WebTerminal } from "../terminal.js";
+import type { PromptStyle, PromptFormatter } from "./prompt.js";
+import type { TerminalTheme } from "./theme.js";
 
 /**
  * Categorization of terminal display lines.
  */
 export type TerminalLineKind = "input" | "output" | "error" | "system";
+
+/**
+ * Shape of the cursor displayed at the active prompt.
+ */
+export type CursorStyle = "beam" | "block" | "underline";
 
 /**
  * Represents a single line rendered in the terminal output.
@@ -48,6 +55,9 @@ export interface TerminalViewState {
     readonly prompt: string;
     readonly viewMode: TerminalViewMode;
     readonly pager?: TerminalPagerState | null | undefined;
+    readonly cursorStyle?: CursorStyle | undefined;
+    readonly theme?: string | TerminalTheme | undefined;
+    readonly suggestion?: string | undefined;
 }
 
 /**
@@ -59,6 +69,10 @@ export interface TerminalControllerOptions {
     readonly host?: string | undefined;
     readonly maxRenderedLines?: number | undefined;
     readonly welcomeBanner?: string | undefined;
+    readonly cursorStyle?: CursorStyle | undefined;
+    readonly cursorBlink?: boolean | undefined;
+    readonly promptStyle?: PromptStyle | PromptFormatter | undefined;
+    readonly theme?: string | TerminalTheme | undefined;
 }
 
 /**
@@ -74,4 +88,3 @@ export interface CompletionResult {
  * Unsubscribe callback for state listeners.
  */
 export type Unsubscribe = () => void;
-

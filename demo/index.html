@@ -39,8 +39,8 @@
             width: 100%;
             max-width: 900px;
             height: 560px;
-            background-color: #0d1117;
-            border: 1px solid #30363d;
+            background-color: #16181d;
+            border: 1px solid #272a34;
             border-radius: 12px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
             display: flex;
@@ -49,12 +49,13 @@
         }
         .title-bar {
             height: 38px;
-            background-color: #161b22;
-            border-bottom: 1px solid #30363d;
+            background-color: #1a1d24;
+            border-bottom: 1px solid #272a34;
             display: flex;
             align-items: center;
             padding: 0 16px;
             user-select: none;
+            gap: 16px;
         }
         .traffic-lights {
             display: flex;
@@ -68,13 +69,28 @@
         .dot-red { background-color: #ff5f56; }
         .dot-yellow { background-color: #ffbd2e; }
         .dot-green { background-color: #27c93f; }
+        .window-tab {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #21252d;
+            border: 1px solid #2d323c;
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #c0caf5;
+        }
+        .tab-icon {
+            color: #e06c75;
+            font-size: 11px;
+        }
         .window-title {
             flex: 1;
-            text-align: center;
+            text-align: right;
             font-family: monospace;
-            font-size: 13px;
-            color: #8b949e;
-            padding-right: 48px;
+            font-size: 11px;
+            color: #6272a4;
         }
         .terminal-mount {
             flex: 1;
@@ -107,7 +123,11 @@
                 <span class="dot dot-yellow"></span>
                 <span class="dot dot-green"></span>
             </div>
-            <div class="window-title">visitor@webterminal: ~</div>
+            <div class="window-tab">
+                <span class="tab-icon">📁</span>
+                <span class="tab-label">.../Documents/ProjetosPessoais/WebTerminal</span>
+            </div>
+            <div class="window-title">ghostty</div>
         </div>
         <div id="terminal-container" class="terminal-mount"></div>
     </main>
@@ -201,6 +221,16 @@
                     content: "export class CoreEngine {\n    constructor(private readonly name: string) {}\n    public run(): void {\n        console.log(`Running ${this.name}...`);\n    }\n}"
                 },
                 {
+                    name: "script.py",
+                    kind: "file",
+                    content: "def calculate_sum(limit: int) -> int:\n    # Bounded summation\n    total = 0\n    for i in range(limit):\n        total += i\n    return total\n\nif __name__ == '__main__':\n    print(calculate_sum(100))"
+                },
+                {
+                    name: "query.sql",
+                    kind: "file",
+                    content: "-- Fetch active system users\nSELECT u.id, u.username, u.email\nFROM users AS u\nWHERE u.active = true\nORDER BY u.created_at DESC\nLIMIT 50;"
+                },
+                {
                     name: "source.zip",
                     kind: "file",
                     content: "WebTerminal source bundle"
@@ -217,11 +247,14 @@
             terminal,
             user: "visitor",
             host: "webterminal",
-            welcomeBanner: "=======================================================\n WebTerminal v0.1.0 — NASA Power of 10 Architecture\n Type 'help' for commands, 'tree' for files.\n Try 'open README.md' (markdown), 'open engine.ts' (code),\n or 'open avatar.png' (image), 'open sample.mp3' (audio).\n Press [q] or [Esc] to exit pager mode.\n======================================================="
+            promptStyle: "robbyrussell",
+            cursorStyle: "beam",
+            theme: "ghostty",
+            welcomeBanner: "=======================================================\n WebTerminal v0.1.0 — Ghostty / Power of 10 Architecture\n Type 'help' for commands, 'theme' to switch themes.\n Try 'theme dracula', 'theme monokai', 'theme ghostty'.\n Try 'theme --cursor block', 'theme --prompt classic'.\n Try 'open engine.ts' (IDE code highlighting).\n Press [q] or [Esc] to exit pager mode.\n======================================================="
         });
 
         const mountElement = document.getElementById("terminal-container");
-        mountTerminal(mountElement, controller, { autoFocus: true });
+        mountTerminal(mountElement, controller, { autoFocus: true, theme: "ghostty" });
     </script>
 </body>
 </html>

@@ -28,9 +28,10 @@ export interface FileClassification {
 
 const TEXT_EXTS = new Set(["", "txt", "rtf", "log", "env", "csv"]);
 const CODE_EXTS = new Set([
-    "js", "ts", "jsx", "tsx", "json", "html", "css", "scss",
-    "py", "rs", "go", "java", "c", "cpp", "h", "hpp", "cs",
+    "js", "ts", "jsx", "tsx", "mjs", "cjs", "json", "html", "htm", "css", "scss",
+    "py", "rs", "go", "java", "c", "cpp", "cc", "cxx", "h", "hpp", "cs",
     "php", "rb", "sh", "bash", "zsh", "sql", "yaml", "yml", "toml", "xml",
+    "lua", "pl", "pro", "prolog", "asm", "s",
 ]);
 const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp", "ico"]);
 const AUDIO_EXTS = new Set(["mp3", "wav", "ogg", "m4a", "flac", "aac"]);

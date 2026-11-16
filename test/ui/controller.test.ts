@@ -238,6 +238,25 @@ describe("TerminalController", () => {
             assert.equal(controller.getState().viewMode, "pager");
             assert.equal(controller.getState().pager?.contentType, "markdown");
         });
+
+        it("computes history autosuggestion and accepts it with ArrowRight without executing", () => {
+            const terminal = new WebTerminal({ root: createVFS() });
+            const controller = new TerminalController({ terminal });
+
+            controller.insertText("cat notes.txt");
+            controller.handleKey("Enter");
+
+            controller.insertText("cat");
+            assert.equal(controller.getState().input, "cat");
+            assert.equal(controller.getState().suggestion, " notes.txt");
+
+            const handled = controller.handleKey("ArrowRight");
+            assert.equal(handled, true);
+            assert.equal(controller.getState().input, "cat notes.txt");
+            assert.equal(controller.getState().cursorIndex, 13);
+            assert.equal(controller.getState().suggestion, "");
+            assert.equal(controller.getState().lines.length, 2);
+        });
     });
 });
 

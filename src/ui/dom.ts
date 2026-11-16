@@ -6,6 +6,8 @@ import type { TerminalController } from "./controller.js";
 import type { TerminalLine, TerminalPagerState, TerminalViewState, Unsubscribe } from "./types.js";
 import { injectTerminalStyles } from "./styles.js";
 import { renderMarkdown } from "./markdown.js";
+import { highlightCode } from "./highlight/index.js";
+import { applyTheme, getTheme, type TerminalTheme } from "./theme.js";
 
 /**
  * Options for mounting the terminal into a DOM element.
@@ -13,10 +15,11 @@ import { renderMarkdown } from "./markdown.js";
 export interface MountTerminalOptions {
     readonly autoFocus?: boolean | undefined;
     readonly injectStyles?: boolean | undefined;
+    readonly theme?: string | TerminalTheme | undefined;
     readonly onStateChange?: ((state: TerminalViewState) => void) | undefined;
 }
 
-const CLICKABLE_FILE_PATTERN = /\.(txt|rtf|md|markdown|png|jpg|jpeg|gif|svg|webp|pdf|zip|tar|gz|mp3|wav|mp4|webm|js|ts|json|py|sh|css|html|sql|url)$/i;
+const CLICKABLE_FILE_PATTERN = /\.(txt|rtf|md|markdown|png|jpg|jpeg|gif|svg|webp|pdf|zip|tar|gz|mp3|wav|mp4|webm|js|mjs|cjs|ts|tsx|jsx|py|rb|sh|bash|zsh|lua|pl|pro|asm|s|sql|html|htm|css|scss|php|java|c|h|cpp|hpp|cs|rs|go|json|xml|yaml|yml|url)$/i;
 
 function renderLineText(
     doc: Document,
@@ -87,10 +90,18 @@ function updateActiveInput(
     activeRow.appendChild(doc.createTextNode(beforeText));
 
     const cursorSpan = doc.createElement("span");
-    cursorSpan.className = "wt-cursor";
+    const styleMod = state.cursorStyle ? ` wt-cursor-${state.cursorStyle}` : " wt-cursor-beam";
+    cursorSpan.className = `wt-cursor${styleMod}`;
     activeRow.appendChild(cursorSpan);
 
     activeRow.appendChild(doc.createTextNode(afterText));
+
+    if (state.suggestion && afterText.length === 0) {
+        const ghostSpan = doc.createElement("span");
+        ghostSpan.className = "wt-ghost-text";
+        ghostSpan.textContent = state.suggestion;
+        activeRow.appendChild(ghostSpan);
+    }
 }
 
 function renderPagerView(
@@ -114,6 +125,8 @@ function renderPagerView(
     body.className = "wt-pager-body";
     if (pager.contentType === "markdown") {
         body.innerHTML = renderMarkdown(pager.content);
+    } else if (pager.contentType === "code") {
+        body.innerHTML = highlightCode(pager.content, pager.title);
     } else {
         const pre = doc.createElement("pre");
         pre.className = "wt-pager-text";
@@ -160,7 +173,24 @@ export function mountTerminal(
         controller.openFile(filename);
     };
 
+    let appliedThemeId: string | undefined;
+    const updateTheme = (themeOrName?: string | TerminalTheme): void => {
+        if (!themeOrName) return;
+        const theme = typeof themeOrName === "string" ? getTheme(themeOrName) : themeOrName;
+        if (theme && theme.id !== appliedThemeId) {
+            appliedThemeId = theme.id;
+            applyTheme(container, theme);
+        }
+    };
+
+    if (options?.theme) {
+        updateTheme(options.theme);
+    }
+
     const unsubscribe = controller.subscribe((state) => {
+        if (state.theme) {
+            updateTheme(state.theme);
+        }
         if (state.viewMode === "pager" && state.pager) {
             linesBox.style.display = "none";
             activeRow.style.display = "none";

@@ -7,7 +7,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { exec } from "node:child_process";
 
-const PORT = 3000;
+const INITIAL_PORT = Number(process.env.PORT) || 3000;
+const MAX_PORT_ATTEMPTS = 10;
 const ROOT_DIR = process.cwd();
 
 const MIME_TYPES = {
@@ -63,16 +64,34 @@ function handleStaticRequest(req, res) {
     });
 }
 
-const server = http.createServer(handleStaticRequest);
+function startServer(port, attempt = 0) {
+    if (attempt >= MAX_PORT_ATTEMPTS) {
+        console.error(`Erro: Não foi possível encontrar uma porta livre após ${MAX_PORT_ATTEMPTS} tentativas.`);
+        process.exit(1);
+    }
 
-server.listen(PORT, () => {
-    const demoUrl = `http://localhost:${PORT}/demo/index.html`;
-    console.log("==================================================");
-    console.log(" WebTerminal Interactive Showcase Server");
-    console.log(` Running at: ${demoUrl}`);
-    console.log(" Press Ctrl+C to stop.");
-    console.log("==================================================");
+    const server = http.createServer(handleStaticRequest);
 
-    exec(`open "${demoUrl}"`, () => {});
-});
+    server.once("error", (err) => {
+        if (err.code === "EADDRINUSE") {
+            console.log(`Porta ${port} já está em utilização. A tentar a porta ${port + 1}...`);
+            startServer(port + 1, attempt + 1);
+        } else {
+            console.error("Erro no servidor:", err);
+            process.exit(1);
+        }
+    });
 
+    server.listen(port, () => {
+        const demoUrl = `http://localhost:${port}/demo/index.html`;
+        console.log("==================================================");
+        console.log(" WebTerminal Interactive Showcase Server");
+        console.log(` Running at: ${demoUrl}`);
+        console.log(" Press Ctrl+C to stop.");
+        console.log("==================================================");
+
+        exec(`open "${demoUrl}"`, () => {});
+    });
+}
+
+startServer(INITIAL_PORT);

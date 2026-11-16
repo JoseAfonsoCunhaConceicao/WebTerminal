@@ -83,6 +83,9 @@ export function dispatchKeyEvent(
             controller.setCursorIndex(controller.getCursorIndex() - 1);
             return true;
         case "ArrowRight":
+            if (controller.acceptGhostSuggestion()) {
+                return true;
+            }
             controller.setCursorIndex(controller.getCursorIndex() + 1);
             return true;
         case "Tab":

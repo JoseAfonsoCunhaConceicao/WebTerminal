@@ -17,6 +17,7 @@ import { manCommand } from "./man.js";
 import { aproposCommand } from "./apropos.js";
 import { treeCommand } from "./tree.js";
 import { openCommand } from "./open.js";
+import { themeCommand } from "./theme.js";
 
 /**
  * Registers all core built-in commands into the provided registry.
@@ -43,4 +44,5 @@ export function registerBuiltinCommands(registry: CommandRegistry): void {
     registry.register("tree", treeCommand);
     registry.register("open", openCommand);
     registry.register("view", openCommand);
+    registry.register("theme", themeCommand);
 }

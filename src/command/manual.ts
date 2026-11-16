@@ -119,6 +119,13 @@ const MANUAL_DATABASE: readonly ManualPage[] = Object.freeze([
         shortDescription: "Alias for open command",
         description: "Alias for open command. Displays file contents in the viewer.",
     },
+    {
+        name: "theme",
+        section: 1,
+        synopsis: "theme [NAME] [--cursor BEAM|BLOCK|UNDERLINE] [--prompt STYLE]",
+        shortDescription: "List or change visual themes, cursor shapes, and prompt styles",
+        description: "Customizes the visual appearance of the terminal. Without arguments, lists available themes. With an argument, switches the active theme (e.g. ghostty, github-dark, dracula, monokai).",
+    },
 ]);
 
 /**
